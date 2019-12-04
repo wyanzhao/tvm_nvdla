@@ -1,7 +1,12 @@
-#include <nvdla_meta.h>
-#include <nvdla_lib.h>
-#include <onnc.h>
-#include <nvdla_op.h>
+#include <NvDlaLib.h>
+
+#include <onnc/IR/IRBuilder.h>
+#include <onnc/IR/Compute/Conv.h>
+#include <onnc/IR/Compute/Relu.h>
+#include <onnc/IR/Compute/OutputOperator.h>
+#include <onnc/IR/Compute/Initializer.h>
+#include <onnc/IR/Compute/InputOperator.h>
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,66 +15,6 @@
 #include <string>
 #include <fstream>
 
-//===----------------------------------------------------------------------===//
-// Create Compute Graph Helper
-//===----------------------------------------------------------------------===//
-template<typename TensorTy>
-static Tensor* CreateComputeTensor(ComputeGraph& pCG, const StringRef& pName,
-                                   const Tensor::Dimensions& pDims)
-{
-  Tensor* t = pCG.addValue<TensorTy>(pName);
-  t->setDimensions(pDims);
-  return t;
-}
-
-template<typename OpTy, typename ... NodeCtorParams>
-OpTy* CreateComputeOperator(onnc::ComputeGraph& pCG,
-                                   const onnc::StringList& pInputNames,
-                                   NodeCtorParams&& ... pParams)
-{
-  OpTy* op = pCG.addOperator<OpTy>(pParams...);
-  for (auto& iname : pInputNames)
-    op->addInput(*pCG.getValue<Tensor>(iname));
-  return op;
-}
-
-// Create Compute Graph Helper
-//===----------------------------------------------------------------------===//
-onnc::Tensor*
-CreateFloatComputeTensor(onnc::ComputeGraph& pCG, const onnc::StringRef& pName,
-                         const onnc::Tensor::Dimensions& pDims)
-{
-  return CreateComputeTensor<FloatTensor>(pCG, pName, pDims);
-}
-
-onnc::Initializer *
-CreateFloatWeightOperator(onnc::ComputeGraph& pCG, const std::string& pName,
-                          const onnc::Tensor::Dimensions& pDims)
-{
-  //CreateWeightOperator<FloatTensor>(pCG, pName, pDims);
-  Initializer* init = pCG.addOperator<Initializer>(pName);
-  
-  //Tensor* value = CreateComputeTensor<TensorTy>(pCG, pName, pDims);
-  FloatTensor* t = pCG.addValue<FloatTensor>(pName);
-  
-  xTensorProto tensor;
-
-  std::ifstream input_fin("/home/dev/Workspace/tvm/tensor.pb");
-  tensor.ParseFromIstream(&input_fin);
-  const std::string &raw_data_str = tensor.raw_data();
-
-  const size_t numElems = raw_data_str.size() / (sizeof(float)); 
-  float* d = (float*)raw_data_str.c_str(); 
-  t->getValues().resize(numElems); 
-  for (size_t i = 0; i < numElems; ++i) 
-    t->getValues()[i] = d[i]; 
-  
-  t->setDimensions(pDims);
-  init->setTensor(*t);
-
-  return init;
-}
-
 
 int main(void)
 {
@@ -77,36 +22,20 @@ int main(void)
 
     onnc::Module module;
     onnc::IRBuilder builder(module);
+    NvDlaLib* nvdla_lib = new NvDlaLib();
 
-    onnc::ComputeGraph& cg = *builder.CreateComputeGraph("mxnet");
-
+    auto& cg = *builder.CreateComputeGraph("relu_test");
   // Create Input.
     cg.addOperator<InputOperator>()->setTensor(
-    *CreateFloatComputeTensor(cg, "data0", {1, 1, 3, 3}));
+    * (nvdla_lib->create_float_compute_tensor(cg, "data0", {1, 1, 3, 3})));
   
-    auto op2 = CreateComputeOperator<Relu>(cg,    {"data0"});
+    auto op2 = nvdla_lib->create_compute_operator<Relu>(cg,    {"data0"});
 
-    op2->addOutput(*CreateFloatComputeTensor(cg, "activation0", {1, 1, 3, 3}));
+    op2->addOutput(*nvdla_lib->create_float_compute_tensor(cg, "activation0", {1, 1, 3, 3}));
 
-    CreateComputeOperator<OutputOperator>(cg, {"activation0"});
 
-    createMemOperandsOfGraph(cg);
-    setMemOperand(module);
+    nvdla_lib->create_compute_operator<OutputOperator>(cg, {"activation0"});
 
-    NvDlaBackendMeta* pMeta = new (NvDlaBackendMeta);
-    init_nvdla_memory(module, pMeta);
-
-    ComputeGraph::iterator nodeIt, nEnd = cg.end();
-    for (nodeIt = cg.begin(); nodeIt != nEnd; ++nodeIt) {
-        const onnc::ComputeOperator *node = nodeIt;
-        std::cout<< node->name() << std::endl;
-        
-        if(node->name() == "Relu"){
-            relu(* (Relu *) node, pMeta);
-        }
-  }
-    task_submit(pMeta);
-    nvdla_filegen(pMeta);
-    
+    nvdla_lib->compile(module, cg);
     return ret;
 }

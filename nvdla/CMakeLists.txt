@@ -18,11 +18,12 @@ link_directories(${GLOG_LIBRARY_DIR})
 
 # include directories
 include_directories(${CMAKE_INCLUDE_PATH})
-include_directories("include")
+include_directories("nvdla_lib/include")
+include_directories("nvdla_lib")
 
 # initial variblles
 set(ONNC_LINKER_LIBS 
-"/home/dev/Workspace/onnc-umbrella/build-dbg/lib/libonnc.a")
+"/home/dev/Workspace/onnc-umbrella/build-normal/lib/libonnc.a")
 set(ONNX_LINKER_LIBS 
 "/home/dev/Workspace/onnc-umbrella/build-onnx/libonnx.a")
 set(ONNX_PROTO_LINKER_LIBS 
@@ -30,8 +31,11 @@ set(ONNX_PROTO_LINKER_LIBS
 set(ONNC_LINKER_INCLUDE 
 "/home/dev/Workspace/onnc-umbrella/onncroot/include")
 set(ONNX_LINKER_INCLUDE 
-"/home/dev/Workspace/onnc-umbrella/install-dbg/home/dev/Workspace/onnc-umbrella/build/include")
-
+"/home/dev/Workspace/onnc-umbrella/build-normal/include")
+set(ONNX_LINKER_INCLUDE 
+"/home/dev/Workspace/onnc-umbrella/src/include")
+set(ONNX_LINKER_INCLUDE 
+"/home/dev/Workspace/onnc-umbrella/install-normal/home/dev/Workspace/onnc-umbrella/onnc/include")
 
 # Generic compilation options
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
@@ -60,22 +64,22 @@ set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
 
 # add source group
 file(GLOB COMPILER_SRCS
-    src/*.cpp
-    src/*.c
-    src/nvdla_op/*.cpp)
-
+    nvdla_lib/*.cpp
+    nvdla_lib/include/*.hpp
+    nvdla_lib/*.c
+    )
 
 # Source file lists
 file(GLOB RELU_TEST_SRCS
     tools/relu_test.cpp)
 
-file(GLOB READ_PROTO_SRCS
-    tools/read_proto.cpp)
 
+file(GLOB CONV_TEST_SRCS
+    tools/conv_test.cpp)
 
 # generate executable
 add_executable(relu_test ${COMPILER_SRCS} ${RELU_TEST_SRCS})
-add_executable(read_proto ${COMPILER_SRCS} ${READ_PROTO_SRCS})
+add_executable(conv_test ${COMPILER_SRCS} ${CONV_TEST_SRCS})
 
 # link libraries
 target_link_libraries(relu_test ${ONNC_LINKER_LIBS} 
@@ -83,7 +87,7 @@ ${ONNX_LINKER_LIBS}
 ${ONNX_PROTO_LINKER_LIBS}
 ${PROTOBUF_LIBRARIES})
 
-target_link_libraries(read_proto ${ONNC_LINKER_LIBS} 
+target_link_libraries(conv_test ${ONNC_LINKER_LIBS} 
 ${ONNX_LINKER_LIBS} 
 ${ONNX_PROTO_LINKER_LIBS}
 ${PROTOBUF_LIBRARIES})
@@ -94,7 +98,8 @@ target_include_directories(relu_test
     ${ONNC_LINKER_INCLUDE}
     ${ONNX_LINKER_INCLUDE}
 )
-target_include_directories(read_proto 
+
+target_include_directories(conv_test 
     PUBLIC 
     ${ONNC_LINKER_INCLUDE}
     ${ONNX_LINKER_INCLUDE}
