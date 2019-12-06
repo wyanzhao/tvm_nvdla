@@ -71,15 +71,26 @@ file(GLOB COMPILER_SRCS
 
 # Source file lists
 file(GLOB RELU_TEST_SRCS
-    tools/relu_test.cpp)
-
+    tests/relu/relu_test.cpp)
 
 file(GLOB CONV_TEST_SRCS
-    tools/conv_test.cpp)
+    tests/conv/conv_test.cpp)
+
+file(GLOB ADD_TEST_SRCS
+    tests/add/add_test.cpp)
+
+file(GLOB MAXPOOL_TEST_SRCS
+    tests/maxpool/maxpool_test.cpp)
+
+file(GLOB RESHAPE_TEST_SRCS
+    tests/reshape/reshape_test.cpp)   
 
 # generate executable
 add_executable(relu_test ${COMPILER_SRCS} ${RELU_TEST_SRCS})
 add_executable(conv_test ${COMPILER_SRCS} ${CONV_TEST_SRCS})
+add_executable(add_test ${COMPILER_SRCS} ${ADD_TEST_SRCS})
+add_executable(maxpool_test ${COMPILER_SRCS} ${MAXPOOL_TEST_SRCS})
+add_executable(reshape_test ${COMPILER_SRCS} ${RESHAPE_TEST_SRCS})
 
 # link libraries
 target_link_libraries(relu_test ${ONNC_LINKER_LIBS} 
@@ -92,6 +103,21 @@ ${ONNX_LINKER_LIBS}
 ${ONNX_PROTO_LINKER_LIBS}
 ${PROTOBUF_LIBRARIES})
 
+target_link_libraries(add_test ${ONNC_LINKER_LIBS} 
+${ONNX_LINKER_LIBS} 
+${ONNX_PROTO_LINKER_LIBS}
+${PROTOBUF_LIBRARIES})
+
+target_link_libraries(maxpool_test ${ONNC_LINKER_LIBS} 
+${ONNX_LINKER_LIBS} 
+${ONNX_PROTO_LINKER_LIBS}
+${PROTOBUF_LIBRARIES})
+
+target_link_libraries(reshape_test ${ONNC_LINKER_LIBS} 
+${ONNX_LINKER_LIBS} 
+${ONNX_PROTO_LINKER_LIBS}
+${PROTOBUF_LIBRARIES})
+
 # Related headers
 target_include_directories(relu_test 
     PUBLIC 
@@ -100,6 +126,24 @@ target_include_directories(relu_test
 )
 
 target_include_directories(conv_test 
+    PUBLIC 
+    ${ONNC_LINKER_INCLUDE}
+    ${ONNX_LINKER_INCLUDE}
+)
+
+target_include_directories(add_test 
+    PUBLIC 
+    ${ONNC_LINKER_INCLUDE}
+    ${ONNX_LINKER_INCLUDE}
+)
+
+target_include_directories(maxpool_test 
+    PUBLIC 
+    ${ONNC_LINKER_INCLUDE}
+    ${ONNX_LINKER_INCLUDE}
+)
+
+target_include_directories(reshape_test 
     PUBLIC 
     ${ONNC_LINKER_INCLUDE}
     ${ONNX_LINKER_INCLUDE}

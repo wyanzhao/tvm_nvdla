@@ -3,15 +3,17 @@
 
 #include "NvDlaMeta.h"
 
-#include <onnc/Core/CustomPass.h>
 #include <onnc/IR/Compute/Relu.h>
 #include <onnc/IR/Compute/Conv.h>
+#include <onnc/IR/Compute/Add.h>
+#include <onnc/IR/Compute/MaxPool.h>
 
 #include <onnc/IR/Compute/Initializer.h>
 #include <onnc/IR/Compute/InputOperator.h>
 #include <onnc/IR/Compute/OutputOperator.h>
 #include <onnc/IR/Compute/Tensor.h>
 #include <onnc/IR/CustomVisitor.h>
+#include <onnc/Core/CustomPass.h>
 #include <onnc/Support/Preprocessor.h>
 #include <onnc/Support/Span.h>
 
@@ -27,6 +29,9 @@ public:
 public:
   void relu(const onnc::Relu& pOp);
   void conv(const onnc::Conv& pOp);
+  void add (const onnc::Add & pOp);
+  void max_pool(const onnc::MaxPool& pOp);
+  void reshape(const onnc::Reshape& pOp) {};
   
   void set_default_attributs(Conv &pConv);
 

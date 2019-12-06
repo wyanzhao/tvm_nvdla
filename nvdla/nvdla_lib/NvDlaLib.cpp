@@ -11,12 +11,20 @@
 #include <onnc/Support/String.h>
 #include <onnc/Support/Timer.h>
 #include <onnc/Support/Algorithm.h>
+#include <onnc/Core/PassSupport.h>
+#include <onnc/IR/Compute/Reshape.h>
 
 #include <cassert>
 #include <unordered_set>
 #include <fstream>
 
-int NvDlaLib::submitEvent(int task_id, int event_type)
+NvDlaLib::~NvDlaLib()
+{
+  delete m_pModule;
+  delete m_pCG;
+}
+
+int NvDlaLib::submit_event(int task_id, int event_type)
 {
   ILoadable::EventListEntry ele;
   ele.id     = m_pMeta->m_EventListEntries.size();
@@ -28,7 +36,7 @@ int NvDlaLib::submitEvent(int task_id, int event_type)
   return ele.id;
 }
 
-int NvDlaLib::submitMemAllocAddress(int size, std::string& blob_name)
+int NvDlaLib::submit_mem_alloc_address(int size, std::string& blob_name)
 {
   int aid = m_pMeta->m_AddressListEntries.size();
 
@@ -109,7 +117,7 @@ void NvDlaLib::task_submit()
         memcpy(blob_data, &(m_pMeta->m_DlaNetworkDesc), sizeof(struct dla_network_desc));
 
         m_pMeta->m_Loadable.priv()->setSymbolContent(blob_name, b, blob_data);
-        dla_start = submitMemAllocAddress(b.size, blob_name);
+        dla_start = submit_mem_alloc_address(b.size, blob_name);
       }
 
       {
@@ -131,7 +139,7 @@ void NvDlaLib::task_submit()
         }
 
         m_pMeta->m_Loadable.priv()->setSymbolContent(blob_name, b, blob_data);
-        submitMemAllocAddress(b.size, blob_name);
+        submit_mem_alloc_address(b.size, blob_name);
       }
 
       {
@@ -153,7 +161,7 @@ void NvDlaLib::task_submit()
         }
 
         m_pMeta->m_Loadable.priv()->setSymbolContent(blob_name, b, blob_data);
-        submitMemAllocAddress(b.size, blob_name);
+        submit_mem_alloc_address(b.size, blob_name);
       }
 
       {
@@ -175,7 +183,7 @@ void NvDlaLib::task_submit()
         }
 
         m_pMeta->m_Loadable.priv()->setSymbolContent(blob_name, b, blob_data);
-        submitMemAllocAddress(b.size, blob_name);
+        submit_mem_alloc_address(b.size, blob_name);
       }
 
       if (!m_pMeta->m_LUTList.empty()) {
@@ -195,7 +203,7 @@ void NvDlaLib::task_submit()
         }
 
         m_pMeta->m_Loadable.priv()->setSymbolContent(blob_name, b, blob_data);
-        submitMemAllocAddress(b.size, blob_name);
+        submit_mem_alloc_address(b.size, blob_name);
       }
 
       {
@@ -226,10 +234,10 @@ void NvDlaLib::task_submit()
         tle.instance  = -1;
 
         if (0 < taskIndex) {
-          tle.preactions.push_back(submitEvent(tle.id, NVDLA_LOADABLE_EVENT_OP_WAIT));
-          tle.postactions.push_back(submitEvent(tle.id, NVDLA_LOADABLE_EVENT_OP_SIGNAL));
+          tle.preactions.push_back(submit_event(tle.id, NVDLA_LOADABLE_EVENT_OP_WAIT));
+          tle.postactions.push_back(submit_event(tle.id, NVDLA_LOADABLE_EVENT_OP_SIGNAL));
         } else {
-          tle.preactions.push_back(submitEvent(tle.id, NVDLA_LOADABLE_EVENT_OP_SIGNAL));
+          tle.preactions.push_back(submit_event(tle.id, NVDLA_LOADABLE_EVENT_OP_SIGNAL));
         }
 
         tle.address_list.push_back(dla_start);
@@ -261,7 +269,7 @@ void NvDlaLib::task_submit()
         memcpy(blob_data, &(m_pMeta->m_EmuNetworkDesc), sizeof(struct emu_network_desc));
 
         m_pMeta->m_Loadable.priv()->setSymbolContent(blob_name, b, blob_data);
-        emu_start = submitMemAllocAddress(b.size, blob_name);
+        emu_start = submit_mem_alloc_address(b.size, blob_name);
       }
 
       {
@@ -284,7 +292,7 @@ void NvDlaLib::task_submit()
         }
 
         m_pMeta->m_Loadable.priv()->setSymbolContent(blob_name, b, blob_data);
-        submitMemAllocAddress(b.size, blob_name);
+        submit_mem_alloc_address(b.size, blob_name);
       }
 
       {
@@ -307,7 +315,7 @@ void NvDlaLib::task_submit()
         }
 
         m_pMeta->m_Loadable.priv()->setSymbolContent(blob_name, b, blob_data);
-        submitMemAllocAddress(b.size, blob_name);
+        submit_mem_alloc_address(b.size, blob_name);
       }
 
       {
@@ -338,8 +346,8 @@ void NvDlaLib::task_submit()
         tle.interface = ILoadable::Interface_EMU1;
         tle.instance  = -1;
 
-        tle.preactions.push_back(submitEvent(tle.id, NVDLA_LOADABLE_EVENT_OP_WAIT));
-        tle.postactions.push_back(submitEvent(tle.id, NVDLA_LOADABLE_EVENT_OP_SIGNAL));
+        tle.preactions.push_back(submit_event(tle.id, NVDLA_LOADABLE_EVENT_OP_WAIT));
+        tle.postactions.push_back(submit_event(tle.id, NVDLA_LOADABLE_EVENT_OP_SIGNAL));
         tle.address_list.push_back(emu_start);
         for (int i = 1; i < m_pMeta->m_AddressListEntries.size(); i++)
           tle.address_list.push_back(i);
@@ -357,7 +365,7 @@ void NvDlaLib::task_submit()
 }
 
 
-void NvDlaLib::init_nvdla_memory(onnc::Module& pModule)
+void NvDlaLib::init_nvdla_memory()
 {
   //using namespace nvdla;
   // [0] entry of memory & address list
@@ -372,7 +380,7 @@ void NvDlaLib::init_nvdla_memory(onnc::Module& pModule)
 
   std::unordered_set<const Tensor*> outputTensors;
   std::vector<const Tensor*>        tensors;
-  for (ComputeOperator& cm : *pModule.getRootComputeGraph()) {
+  for (ComputeOperator& cm : *(m_pModule->getRootComputeGraph())) {
     if (OutputOperator* outputOperator = dyn_cast<OutputOperator>(&cm)) {
       for (unsigned idx = 0; idx < outputOperator->getNumOfInputs(); ++idx) {
         outputTensors.insert(static_cast<const Tensor*>(outputOperator->getInput(idx)));
@@ -540,38 +548,20 @@ CbufAllocType NvDlaLib::getCbufAllocType(const NvDlaCubeInfo& xinfo, const NvDla
   return CbufAllocType::kUnfeasible;
 }                                
 
-template<typename TensorTy>
-Tensor* NvDlaLib::create_compute_tensor(ComputeGraph& pCG, const StringRef& pName,
-                                   const Tensor::Dimensions& pDims)
-{
-  Tensor* t = pCG.addValue<TensorTy>(pName);
-  t->setDimensions(pDims);
-  return t;
-}
-
-Tensor* NvDlaLib::create_float_compute_tensor(ComputeGraph& pCG, const StringRef& pName,
+Tensor* NvDlaLib::create_float_compute_tensor(const StringRef& pName,
                          const Tensor::Dimensions& pDims)
 {
-  return this->create_compute_tensor<FloatTensor>(pCG, pName, pDims);
+  return this->create_compute_tensor<FloatTensor>(pName, pDims);
 }
 
-template<typename TensorTy>
-void NvDlaLib::create_weight_operator(ComputeGraph& pCG, const std::string& pName,
-                                 const Tensor::Dimensions& pDims)
-{
-  Initializer* init = pCG.addOperator<Initializer>(pName);
-  Tensor* value = this->create_compute_tensor<TensorTy>(pCG, pName, pDims);
-  init->setTensor(*value);
-}                              
-
 void
-NvDlaLib::create_float_weight_operator(ComputeGraph& pCG, const std::string& pName,
+NvDlaLib::create_float_weight_operator(const std::string& pName,
                           const Tensor::Dimensions& pDims, const std::string& weight_path)
 {
   assert(!weight_path.empty());
 
-  Initializer* init = pCG.addOperator<Initializer>(pName);
-  Tensor* value = this->create_compute_tensor<FloatTensor>(pCG, pName, pDims);
+  Initializer* init = m_pCG->addOperator<Initializer>(pName);
+  Tensor* value = this->create_compute_tensor<FloatTensor>(pName, pDims);
 
   xTensorProto tensor;
 
@@ -583,30 +573,221 @@ NvDlaLib::create_float_weight_operator(ComputeGraph& pCG, const std::string& pNa
   const size_t numElems = raw_data_str.size() / (sizeof(float)); 
   float* d = (float*)raw_data_str.c_str(); 
   ((FloatTensor *)value)->getValues().resize(numElems); 
+  printf("INPUT PATH:%s\n", weight_path.c_str());
+  printf("INPUT data:\n");
   for (size_t i = 0; i < numElems; ++i) {
+    printf("%f,", d[i]);
     ((FloatTensor *)value)->getValues()[i] = d[i];
     }
+  printf("\n");
   
   init->setTensor(*value);
 }
 
-void NvDlaLib::compile(onnc::Module& pModule, onnc::ComputeGraph& pCG)
+void NvDlaLib::optimize()
 {
-  this->init_nvdla_memory(pModule);
+  // for now, only use propagate_const_with_diff_shape
+  this->propagate_const_with_diff_shape();
 
-  ComputeGraph::iterator nodeIt, nEnd = pCG.end();
-    for (nodeIt = pCG.begin(); nodeIt != nEnd; ++nodeIt) {
+}
+
+void NvDlaLib::compile()
+{
+  this->init_nvdla_memory();
+
+  ComputeGraph::iterator nodeIt, nEnd = m_pCG->end();
+    for (nodeIt = m_pCG->begin(); nodeIt != nEnd; ++nodeIt) {
         const onnc::ComputeOperator *node = nodeIt;
         std::cout<< node->name() << std::endl;
-        
         if(node->name() == "Relu"){
             this->relu(* (Relu *) node);
         }
         else if(node->name() == "Conv") {
             this->conv(* (Conv *) node);
         }
+        else if(node->name() == "Add") {
+            this->add(* (Add *) node);
+        }
+        else if(node->name() == "Reshape") {
+            this->reshape(* (Reshape *) node);
+        }
+        else if(node->name() == "MaxPool") {
+            this->max_pool(* (MaxPool *) node);
+        }
+        else {
+          //assert((node->name() == "InputOperator" || node->name() == "Initializer" || node->name() == "OutputOperator"));
+          if (!(node->name() == "InputOperator" || node->name() == "Initializer" || node->name() == "OutputOperator")) {
+            std::cout<< "Unsupport Op:"<< node->name()<< std::endl;
+            std::abort();
+          }
+        }
+        
   }
 
   this->task_submit();
   this->nvdla_filegen();
+}
+
+//===----------------------------------------------------------------------===//
+// PropagateConstWithDiffShape
+//===----------------------------------------------------------------------===//
+
+// TODO: Need to add Flatten, Sueeze, Unsqueeze
+// const static std::unordered_set<const void *>
+// shapingNodeIDs {&Flatten::ID, &Reshape::ID, &Squeeze::ID, &Unsqueeze::ID};
+const static std::unordered_set<const void *>
+  shapingNodeIDs {&Reshape::ID};
+
+static bool validate(const Reshape* const pR)
+{
+  assert(pR->getNumOfInputs() == 2 &&
+      "Reshape must have exactly two inputs");
+  assert(pR->getNumOfOutputs() == 1 &&
+      "Reshape must have exactly one output");
+
+  const Tensor* const inputTensor = pR->getData();
+  const Tensor* const shapeTensor = pR->getShape();
+  const Tensor* const outputTensor = pR->getReshaped();
+
+  const ComputeOperator* const shapeNode = static_cast<const ComputeOperator*>(shapeTensor->getDefine());
+  if (!isa<Initializer>(shapeNode)) {
+    // Do not support if the input shape is not Initializer
+    assert(0 && "Now only support input shape is Initializer, and this \
+assertion is only used to check this condition. This assertion should \
+be removed for general usage (just return and do nothing).");
+    return false;
+  }
+
+  const Tensor::Dimensions& inputDims = inputTensor->getDimensions();
+  const Tensor::Dimensions& outputDims = outputTensor->getDimensions();
+
+  const Int64Tensor* const intShapeTensor = dynamic_cast<const Int64Tensor*>(shapeTensor);
+  assert(intShapeTensor != nullptr && "Shape tensor must be type of Int64Tensor");
+  assert(intShapeTensor->getValues().size() != 0 &&
+      intShapeTensor->getValues().size() == outputDims.size());
+
+  Tensor::Dimension oriTot = 1, resTot = 1;
+  for (const auto& dim : inputDims) {
+    oriTot *= dim;
+  }
+  for (const auto& dim : outputDims) {
+    resTot *= dim;
+  }
+  assert(oriTot == resTot && "The total size of shape should be the same");
+  return true;
+}
+
+template <typename ShapingNode>
+static void removeShapingNode(ShapingNode* const pS,
+                              Initializer* pI,
+                              ComputeGraph& pCG,
+                              bool& erased)
+{
+  // check the input Value and output Value size are
+  // correct under different shaping node.
+  // now only support input shape to Reshape is Initializer (constant)
+  if (!validate(pS)) return;
+
+  // if the num of uses of pI > 1, clone one Initializer
+  if (pI->getOutput<Tensor>()->getUses().size() > 1) {
+    // First clone the original Tensor
+    // Need the same dimensions and values
+    Tensor* clonedTensor = pI->getOutput<Tensor>()->clone();
+    clonedTensor = pCG.addValue<Tensor>(clonedTensor);
+    assert(clonedTensor != nullptr && "Cloned tensor name must be unique");
+
+    // Add a new Initializer here
+    pI = pCG.addOperator<Initializer>(pI->name().str() + "<clone>");
+    assert(pI != nullptr && "The name must be unique");
+
+    // Set the cloned tensor
+    pI->setTensor(*clonedTensor);
+  }
+
+  Tensor* const constTensor = pI->getOutput<Tensor>();
+  Tensor* const outTensor = pS->getOutput(0);
+  constTensor->setDimensions(outTensor->getDimensions());
+  outTensor->replaceAllUsesWith(*constTensor);
+
+  // If pS is Reshape, the second input might become
+  // a dangling node.
+  // Currently only remove additional input up to one layer
+  // Complete version should do the same as in EliminateDeadEnd pass
+  if (pS->getNumOfInputs() >= 2) {
+    for (unsigned int idx = 1; idx < pS->getNumOfInputs(); ++idx) {
+      Value* inputValue = pS->getInput(idx);
+      if (inputValue->getUses().size() == 1) {
+        ComputeOperator* uselessNode = static_cast<ComputeOperator*>(inputValue->getDefine());
+        uselessNode->removeAllInputs();
+        uselessNode->removeAllOutputs();
+        pCG.erase(*uselessNode);
+      }
+    }
+  }
+
+  pS->removeAllInputs();
+  pS->removeAllOutputs();
+  erased = true;
+}
+
+template <int T = 0>
+static void visitShapingNode(ComputeOperator& node,
+                             Initializer* pI,
+                             ComputeGraph& pCG,
+                             bool& erased)
+{
+  assert(false && "should not reach here, no matched node type");
+}
+
+template <typename FirstNodeType, typename... RestNodeTypes, int T = 0>
+static void visitShapingNode(ComputeOperator& node,
+                             Initializer* pI,
+                             ComputeGraph& pCG,
+                             bool& erased)
+{
+  if (node.getID() == &FirstNodeType::ID) {
+    removeShapingNode<FirstNodeType>(dyn_cast<FirstNodeType>(&node), pI, pCG, erased);
+  } else {
+    visitShapingNode<RestNodeTypes...>(node, pI, pCG, erased);
+  }
+  return;
+}
+
+void NvDlaLib::propagate_const_with_diff_shape()
+{
+  // Can deal with Initializer -> Unsqueeze -> Reshape -> Flatten case.
+  std::vector<ComputeOperator*> rmList;
+  for (ComputeOperator &node : *m_pCG) {
+    if (shapingNodeIDs.count(node.getID())) {
+      assert(node.getNumOfInputs() >= 1 &&
+             "Shaping Node must have no less than one input");
+      assert(node.getNumOfOutputs() == 1 &&
+             "Shaping Node must have exactly one output");
+
+      // Assume input data always at index 0
+      Value* inputValue = node.getInput(0);
+      ComputeOperator* inputNode = static_cast<ComputeOperator*>(inputValue->getDefine());
+      if (Initializer* pI = dyn_cast<Initializer>(inputNode)) {
+        bool erased = false;
+
+        // This function will modify pCG and update erased.
+        //visitShapingNode<Squeeze, Unsqueeze, Reshape, Flatten>(node, pI, pCG, erased);
+        visitShapingNode<Reshape>(node, pI, *m_pCG, erased);
+
+        if (erased) rmList.emplace_back(&node);
+      }
+      else if (node.getID() != &Reshape::ID) {
+        // This else if block can be removed
+        // It's only used to check current supporting conditions.
+        // Need to be removed in general cases.
+        assert(0 && "The shaping node is not Reshape, so the input must be Initializer for now");
+      }
+    }
+  }
+
+  for (auto* pNode : rmList) {
+    m_pCG->erase(*pNode);
+  }
+
+  m_pCG->topologicalSort();
 }

@@ -21,31 +21,31 @@ int main(void)
 {
     uint32_t ret = 0;
 
-    onnc::Module module;
-    onnc::IRBuilder builder(module);
-    NvDlaLib* nvdla_lib = new NvDlaLib();
+    auto p_module = new(onnc::Module);
+    onnc::IRBuilder builder(*p_module);
+    auto cg = builder.CreateComputeGraph("conv_test");
+    NvDlaLib* nvdla_lib = new NvDlaLib(p_module, cg);
 
-    auto& cg = *builder.CreateComputeGraph("conv_test");
-
+    
   // Create Input.
-    cg.addOperator<InputOperator>()->setTensor(
-    * (nvdla_lib->create_float_compute_tensor(cg, "data_0", {1, 1, 12, 8})));
+    cg->addOperator<InputOperator>()->setTensor(
+    * (nvdla_lib->create_float_compute_tensor("data_0", {1, 1, 12, 8})));
 
     // Create weights.
-    nvdla_lib->create_float_weight_operator(cg, "conv1_w_0", {13, 1, 1, 1}, "/home/dev/Workspace/tvm/nvdla/tensor1.pb");
+    nvdla_lib->create_float_weight_operator("conv1_w_0", {13, 1, 1, 1}, "/home/dev/Workspace/tvm/nvdla/tensor1.pb");
 
     // create nodes (layers)
-    onnc::Conv* conv_op1 = nvdla_lib->create_compute_operator<Conv>(cg,    {"data_0", "conv1_w_0"});
+    onnc::Conv* conv_op1 = nvdla_lib->create_compute_operator<Conv>({"data_0", "conv1_w_0"});
     // set strides
     {
       auto v = nvdla_lib->get_values<int64_t>({1, 1});
       conv_op1->setStrides(std::move(v));
     }
 
-    conv_op1->addOutput(*nvdla_lib->create_float_compute_tensor(cg, "output1", {1, 13, 12, 8}));
+    conv_op1->addOutput(*nvdla_lib->create_float_compute_tensor("output1", {1, 13, 12, 8}));
 
-    nvdla_lib->create_float_weight_operator(cg, "conv2_w_0", {8, 13, 2, 8}, "/home/dev/Workspace/tvm/nvdla/tensor2.pb");
-    onnc::Conv* conv_op2 = nvdla_lib->create_compute_operator<Conv>(cg,    {"output1", "conv2_w_0"});
+    nvdla_lib->create_float_weight_operator("conv2_w_0", {8, 13, 2, 8}, "/home/dev/Workspace/tvm/nvdla/tensor2.pb");
+    onnc::Conv* conv_op2 = nvdla_lib->create_compute_operator<Conv>({"output1", "conv2_w_0"});
         //set conv2 attributes
     {
       auto dialations = nvdla_lib->get_values<int64_t>({1, 1});
@@ -64,11 +64,11 @@ int main(void)
       conv_op1->setStrides(std::move(strides));
     }
 
-    conv_op2->addOutput(*nvdla_lib->create_float_compute_tensor(cg, "output2", {1, 8, 11, 1}));
-    nvdla_lib->create_compute_operator<OutputOperator>(cg, {"output2"});
+    conv_op2->addOutput(*nvdla_lib->create_float_compute_tensor("output2", {1, 8, 11, 1}));
+    nvdla_lib->create_compute_operator<OutputOperator>({"output2"});
 
-
-    nvdla_lib->compile(module, cg);
+    nvdla_lib->optimize();
+    nvdla_lib->compile();
 
     return ret;
 }
