@@ -574,12 +574,11 @@ NvDlaLib::create_float_weight_operator(const std::string& pName,
   float* d = (float*)raw_data_str.c_str(); 
   ((FloatTensor *)value)->getValues().resize(numElems); 
   printf("INPUT PATH:%s\n", weight_path.c_str());
-  printf("INPUT data:\n");
   for (size_t i = 0; i < numElems; ++i) {
-    printf("%f,", d[i]);
+
     ((FloatTensor *)value)->getValues()[i] = d[i];
     }
-  printf("\n");
+
   
   init->setTensor(*value);
 }

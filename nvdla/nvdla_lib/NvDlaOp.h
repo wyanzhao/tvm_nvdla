@@ -33,8 +33,14 @@ public:
   void max_pool(const onnc::MaxPool& pOp);
   void reshape(const onnc::Reshape& pOp) {};
   
-  void set_default_attributs(Conv &pConv);
-
+  void set_default_attributs(Conv &pOp);
+  void set_default_attributs(MaxPool &pOp);
+  void set_default_attributs(Relu &pOp) {}
+  void set_default_attributs(Reshape &pOp) {}
+  void set_default_attributs(Add &pOp) {}
+  void set_default_attributs(OutputOperator &pOp) {}
+  void set_default_attributs(InputOperator &pOp) {}
+  void set_default_attributs(Initializer &pOp) {}
 protected:
   NvDlaOp(const NvDlaConstants& constants, CbufAllocTypeGetter cbufAllocTypeGetter) noexcept
   : m_nvdla_constants(constants)
@@ -74,9 +80,7 @@ protected:
   void emitSdp(std::uint8_t opType, const Tensor& firstInput, const Tensor& secondInput, const Tensor& output);
   std::pair<unsigned, bool> tryAllocateDataAndWeightsIntoCBuf(const NvDlaCubeInfo& data, NvDlaCubeInfo& weight,
                                                               Tensor::Dimension yDilation) const;
-
-private:
-
+protected:
   template<typename T>
   void set_default_strides(T &pOp);
 
@@ -88,6 +92,8 @@ private:
   
   template<typename T>
   void set_default_pads(T &pOp);
+
+private:
 
   MemoryListEntryId packWeight(span<const float> weight, const Tensor* weightTensor, NvDlaDims srcDims,
                                NvDlaDims destDims, Tensor::Dimension numFrontPaddingChannels,

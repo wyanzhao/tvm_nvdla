@@ -83,7 +83,10 @@ file(GLOB MAXPOOL_TEST_SRCS
     tests/maxpool/maxpool_test.cpp)
 
 file(GLOB RESHAPE_TEST_SRCS
-    tests/reshape/reshape_test.cpp)   
+    tests/reshape/reshape_test.cpp) 
+
+file(GLOB LENET_TEST_SRCS
+    tests/lenet/lenet_test.cpp)   
 
 # generate executable
 add_executable(relu_test ${COMPILER_SRCS} ${RELU_TEST_SRCS})
@@ -91,6 +94,7 @@ add_executable(conv_test ${COMPILER_SRCS} ${CONV_TEST_SRCS})
 add_executable(add_test ${COMPILER_SRCS} ${ADD_TEST_SRCS})
 add_executable(maxpool_test ${COMPILER_SRCS} ${MAXPOOL_TEST_SRCS})
 add_executable(reshape_test ${COMPILER_SRCS} ${RESHAPE_TEST_SRCS})
+add_executable(lenet_test ${COMPILER_SRCS} ${LENET_TEST_SRCS})
 
 # link libraries
 target_link_libraries(relu_test ${ONNC_LINKER_LIBS} 
@@ -118,6 +122,12 @@ ${ONNX_LINKER_LIBS}
 ${ONNX_PROTO_LINKER_LIBS}
 ${PROTOBUF_LIBRARIES})
 
+target_link_libraries(lenet_test ${ONNC_LINKER_LIBS} 
+${ONNX_LINKER_LIBS} 
+${ONNX_PROTO_LINKER_LIBS}
+${PROTOBUF_LIBRARIES})
+
+
 # Related headers
 target_include_directories(relu_test 
     PUBLIC 
@@ -144,6 +154,12 @@ target_include_directories(maxpool_test
 )
 
 target_include_directories(reshape_test 
+    PUBLIC 
+    ${ONNC_LINKER_INCLUDE}
+    ${ONNX_LINKER_INCLUDE}
+)
+
+target_include_directories(lenet_test 
     PUBLIC 
     ${ONNC_LINKER_INCLUDE}
     ${ONNX_LINKER_INCLUDE}

@@ -67,6 +67,8 @@ public:
   OpTy* op = m_pCG->addOperator<OpTy>(pParams...);
   for (auto& iname : pInputNames)
     op->addInput(*(m_pCG->getValue<Tensor>(iname)));
+  this->set_default_attributs(*op);
+  
   return op;
   }                                   
 
