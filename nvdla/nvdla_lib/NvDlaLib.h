@@ -68,7 +68,6 @@ public:
   for (auto& iname : pInputNames)
     op->addInput(*(m_pCG->getValue<Tensor>(iname)));
   this->set_default_attributs(*op);
-  
   return op;
   }                                   
 

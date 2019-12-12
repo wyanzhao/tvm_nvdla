@@ -80,7 +80,9 @@ protected:
   void emitSdp(std::uint8_t opType, const Tensor& firstInput, const Tensor& secondInput, const Tensor& output);
   std::pair<unsigned, bool> tryAllocateDataAndWeightsIntoCBuf(const NvDlaCubeInfo& data, NvDlaCubeInfo& weight,
                                                               Tensor::Dimension yDilation) const;
+                                                              
 protected:
+
   template<typename T>
   void set_default_strides(T &pOp);
 

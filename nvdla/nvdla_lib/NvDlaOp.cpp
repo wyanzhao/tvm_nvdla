@@ -457,7 +457,7 @@ AddressListEntryId NvDlaOp::issueEmuAddr(MemoryListEntryId mid)
 void NvDlaOp::issueEmuOp(NvDlaEmuOperation* op)
 {
   m_pMeta->m_EMUOperationList.push_back(op);
-  
+
   m_pMeta->appendOperationMeta(m_pMeta->m_EMUOperationList.size() - 1,
                               NvDlaBackendMeta::OperationMeta::Category::emu);
 }
@@ -569,6 +569,7 @@ void NvDlaOp::issueDlaOp(NvDlaDlaOperation* op, NvDlaDlaOperation* op_fuse, NvDl
 
     m_pMeta->m_DLAOperationList.push_back(op_fuse);
     m_pMeta->m_pPrevOp = op_fuse;
+
     m_pMeta->appendOperationMeta(m_pMeta->m_DLAOperationList.size() - 1,
                                 NvDlaBackendMeta::OperationMeta::Category::dla);
   } else {
@@ -588,7 +589,6 @@ void NvDlaOp::emitSdp(std::uint8_t opType, const Tensor& first, const Tensor& se
 
   // make sure the 'first' tensor is always non-constant
   if (isConstant(first)) {
-    printf("first constant was called\n");
     emitSdp(opType, second, first, output);
     return;
   }
@@ -661,8 +661,6 @@ void NvDlaOp::emitSdp(std::uint8_t opType, const Tensor& first, const Tensor& se
     .setAddress(issueDlaAddr(output, outputCubeInfo))
     .setInfo(outputCubeInfo);
 
-  printf("add was called\n");
-  printf("opType:%d\n", opType);
   issueDlaOp(std::move(operation));
 }
 
@@ -1050,7 +1048,7 @@ void NvDlaOp::relu(const onnc::Relu& pOp)
   relu_surf->dst_data.line_stride  = Y_cube.stride_line;
   relu_surf->dst_data.surf_stride  = Y_cube.stride_surface;
   relu_surf->dst_data.plane_stride = Y_cube.stride_plane;
-  printf("Relu was called\n");
+
   issueDlaOp(relu_op, NULL, m_pMeta->m_pPrevOp);
 }
 
@@ -1161,10 +1159,8 @@ void NvDlaOp::conv(const onnc::Conv& pOp)
     int unused_input_height = (input_height + pad_top) - (kernel_height + stride_y * (output_height - 1));
     if (unused_input_height < 0)
       unused_input_height = 0;
-    auto conv_split_times = 0;
+
     do { // for each split convolution
-      printf("Conv Split times:%d\n", conv_split_times++);
-      printf("input_height:%d, unused_input_height:%d, input_h_idx:%d, affordable_conv_height%d\n", input_height, unused_input_height, input_h_idx, affordable_conv_height);
       is_last_split = (input_height - unused_input_height - std::max(input_h_idx, 0)) <= affordable_conv_height;
 
       int input_split_height;
@@ -1478,7 +1474,6 @@ void NvDlaOp::max_pool(const onnc::MaxPool& pOp)
   maxpool_surf->dst_data.surf_stride  = Y_cube.stride_surface;
   maxpool_surf->dst_data.plane_stride = Y_cube.stride_plane;
 
-  printf("Maxpool was called\n");
   issueDlaOp(maxpool_op, NULL, m_pMeta->m_pPrevOp);
 }
 
