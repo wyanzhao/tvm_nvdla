@@ -368,6 +368,14 @@ def test_forward_convolution():
                           'NCHW', [4, 124, 17, 17])
         _test_convolution('conv_transpose', [4, 32, 8, 8], [3, 3, 12, 32], [1, 1], [2, 2], 'VALID',
                           'NCHW', [4, 12, 17, 17])
+        # kernel 2x2, strides (2,2)
+        _test_convolution('conv_transpose', [4, 19, 8, 8], [2, 2, 19, 19], [1, 1], [2, 2], 'VALID',
+                          'NCHW', [4, 19, 16, 16])
+        _test_convolution('conv_transpose', [4, 32, 8, 8], [2, 2, 12, 32], [1, 1], [2, 2], 'VALID',
+                          'NCHW', [4, 12, 16, 16])
+        # output channel is 1
+        _test_convolution('conv_transpose', [1, 19, 8, 8], [1, 1, 1, 19], [1, 1], [1, 1], 'VALID',
+                          'NCHW', [1, 1, 8, 8])
 
     _test_convolution('conv', [4, 8, 8, 176], [1, 1, 176, 32], [1, 1], [1, 1], 'SAME', 'NHWC')
     _test_convolution('conv', [4, 17, 17, 19], [3, 3, 19, 19], [1, 1], [2, 2], 'VALID', 'NHWC')
@@ -386,6 +394,14 @@ def test_forward_convolution():
                       'NHWC', [4, 17, 17, 124])
     _test_convolution('conv_transpose', [4, 8, 8, 32], [3, 3, 12, 32], [1, 1], [2, 2], 'VALID',
                       'NHWC', [4, 17, 17, 12])
+    # kernel 2x2, strides (2,2)
+    _test_convolution('conv_transpose', [4, 8, 8, 19], [2, 2, 19, 19], [1, 1], [2, 2], 'VALID',
+                      'NHWC', [4, 16, 16, 19])
+    _test_convolution('conv_transpose', [4, 8, 8, 32], [2, 2, 12, 32], [1, 1], [2, 2], 'VALID',
+                      'NHWC', [4, 16, 16, 12])
+    # output channel is 1
+    _test_convolution('conv_transpose', [1, 8, 8, 19], [1, 1, 1, 19], [1, 1], [1, 1], 'VALID',
+                      'NHWC', [1, 8, 8, 1])
 
 
 #######################################################################
@@ -2188,6 +2204,20 @@ def test_forward_transpose():
     _test_forward_tranapose_axes_input((2, 3, 4, 5), (3, 0, 1, 2))
 
 
+def _test_forward_slice_operation_input(input_value, begin_value, size_value):
+    input_data = np.array(input_value, dtype=np.float32)
+    with tf.Graph().as_default():
+        input_tensor = tf.placeholder(
+            shape=input_data.shape, dtype=input_data.dtype, name="input")
+        begin_tensor = tf.expand_dims(begin_value, axis=0)
+        size_tensor = tf.expand_dims(size_value, axis=0)
+        slice_tensor = tf.slice(input_tensor, begin_tensor, size_tensor, name='slice_output')
+        compare_tf_with_tvm([input_data], ['input:0'], 'slice_output:0')
+
+
+def test_forward_slice():
+    _test_forward_slice_operation_input([1, 1], 0, 2)
+
 def test_forward_ceil():
     ishape = (1, 3, 10, 10)
     inp_array = np.random.uniform(size=ishape).astype(np.float32)
@@ -2760,8 +2790,8 @@ def test_forward_add_n():
 # Main
 # ----
 if __name__ == '__main__':
-
     # Transforms
+    test_forward_slice()
     test_forward_transpose()
     test_forward_reshape()
     test_forward_depthtospace()

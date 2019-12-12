@@ -63,6 +63,8 @@ tvm_option(USE_NNPACK "Build with nnpack support" OFF)
 tvm_option(USE_RANDOM "Build with random support" OFF)
 tvm_option(USE_MICRO_STANDALONE_RUNTIME "Build with micro.standalone_runtime support" OFF)
 tvm_option(USE_ANTLR "Build with ANTLR for Relay parsing" OFF)
+tvm_option(USE_TFLITE "Build with tflite support" OFF)
+tvm_option(USE_TENSORFLOW_PATH "TensorFlow root path when use TFLite" none)
 
 # include directories
 include_directories(${CMAKE_INCLUDE_PATH})
@@ -232,6 +234,12 @@ if(USE_VM_PROFILER)
   list(APPEND RUNTIME_SRCS ${RUNTIME_VM_PROFILER_SRCS})
 endif(USE_VM_PROFILER)
 
+if(USE_EXAMPLE_EXT_RUNTIME)
+  message(STATUS "Build with example external runtime...")
+  file(GLOB RUNTIME_EXAMPLE_EXTERNAL_SRCS src/runtime/contrib/example_ext_runtime/*.cc)
+  list(APPEND RUNTIME_SRCS ${RUNTIME_EXAMPLE_EXTERNAL_SRCS})
+endif(USE_EXAMPLE_EXT_RUNTIME)
+
 # Module rules
 include(cmake/modules/VTA.cmake)
 include(cmake/modules/CUDA.cmake)
@@ -251,6 +259,7 @@ include(cmake/modules/contrib/MicroStandaloneRuntime.cmake)
 include(cmake/modules/contrib/Sort.cmake)
 include(cmake/modules/contrib/NNPack.cmake)
 include(cmake/modules/contrib/HybridDump.cmake)
+include(cmake/modules/contrib/TFLite.cmake)
 
 if(NOT MSVC)
   include(CheckCXXCompilerFlag)

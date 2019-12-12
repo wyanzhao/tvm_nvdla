@@ -18,7 +18,6 @@
  */
 
 /*!
- *  Copyright (c) 2017 by Contributors
  * \file codegen.cc
  * \brief Common utilities to generated C style code.
  */
@@ -42,8 +41,8 @@ runtime::Module Build(const Array<LoweredFunc>& funcs,
     mode = mode.substr(0, pos);
   }
   Array<LoweredFunc> transformed_funcs;
-  for (const auto& x : funcs) {
-    if (BuildConfig::Current()->disable_assert) {
+  if (BuildConfig::Current()->disable_assert) {
+    for (const auto& x : funcs) {
       auto func = ir::SkipAssert(x);
       transformed_funcs.push_back(func);
     }
