@@ -26,11 +26,12 @@
 
 #include "topi/tags.h"
 #include "topi/detail/fuse.h"
-#include "tvm/operation.h"
-#include "tvm/build_module.h"
+#include "tvm/top/operation.h"
+#include "tvm/target/generic_func.h"
 
 namespace topi {
 using namespace tvm;
+using namespace tvm::top;
 
 namespace x86 {
 /*!

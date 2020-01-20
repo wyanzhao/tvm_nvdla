@@ -31,9 +31,8 @@
 
 #include <gtest/gtest.h>
 #include <topi/generic/injective.h>
-#include <tvm/build_module.h>
-#include <tvm/operation.h>
-#include <tvm/packed_func_ext.h>
+#include <tvm/driver/driver.h>
+#include <tvm/top/operation.h>
 #include <tvm/relay/analysis.h>
 #include <tvm/relay/expr.h>
 #include <tvm/relay/transform.h>

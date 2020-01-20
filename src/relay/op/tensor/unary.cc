@@ -34,9 +34,9 @@ namespace relay {
 
 #define RELAY_UNARY_COMPUTE(FTOPI)                      \
   [] (const Attrs& attrs,                               \
-      const Array<Tensor>& inputs,                      \
+      const Array<top::Tensor>& inputs,                      \
       const Type& out_type,                             \
-      const Target& target) -> Array<Tensor> {          \
+      const Target& target) -> Array<top::Tensor> {          \
     return {FTOPI(inputs[0])};                          \
   }                                                     \
 
@@ -157,9 +157,9 @@ RELAY_REGISTER_UNARY_OP("copy")
 // relay.clip
 TVM_REGISTER_NODE_TYPE(ClipAttrs);
 
-TVM_REGISTER_API("relay.op._make.clip")
-.set_body_typed<Expr(Expr, double, double)>([](Expr a, double a_min, double a_max) {
-    auto attrs = make_node<ClipAttrs>();
+TVM_REGISTER_GLOBAL("relay.op._make.clip")
+.set_body_typed([](Expr a, double a_min, double a_max) {
+    auto attrs = make_object<ClipAttrs>();
     attrs->a_min = a_min;
     attrs->a_max = a_max;
     static const Op& op = Op::Get("clip");
@@ -290,8 +290,8 @@ bool ShapeOfRel(const Array<Type>& types,
   return true;
 }
 
-Array<Tensor> ShapeOfCompute(const Attrs& attrs,
-                             const Array<Tensor>& inputs,
+Array<top::Tensor> ShapeOfCompute(const Attrs& attrs,
+                             const Array<top::Tensor>& inputs,
                              const Type& out_type,
                              const Target& target) {
   CHECK_EQ(inputs.size(), 1);
@@ -300,9 +300,9 @@ Array<Tensor> ShapeOfCompute(const Attrs& attrs,
   return {topi::shape(inputs[0], param->dtype)};
 }
 
-TVM_REGISTER_API("relay.op._make.shape_of")
-.set_body_typed<Expr(Expr, DataType)>([](Expr data, DataType dtype) {
-  auto attrs = make_node<ShapeOfAttrs>();
+TVM_REGISTER_GLOBAL("relay.op._make.shape_of")
+.set_body_typed([](Expr data, DataType dtype) {
+  auto attrs = make_object<ShapeOfAttrs>();
   attrs->dtype = dtype;
   static const Op& op = Op::Get("shape_of");
   return CallNode::make(op, {data}, Attrs(attrs), {});
@@ -341,19 +341,19 @@ bool NdarraySizeRel(const Array<Type>& types,
   return true;
 }
 
-Array<Tensor> NdarraySizeCompute(const Attrs& attrs,
-                          const Array<Tensor>& inputs,
+Array<top::Tensor> NdarraySizeCompute(const Attrs& attrs,
+                          const Array<top::Tensor>& inputs,
                           const Type& out_type,
                           const Target& target) {
   CHECK_EQ(inputs.size(), 1);
   const auto* param = attrs.as<NdarraySizeAttrs>();
   CHECK(param != nullptr);
-  return Array<Tensor>{topi::ndarray_size(inputs[0], param->dtype)};
+  return Array<top::Tensor>{topi::ndarray_size(inputs[0], param->dtype)};
 }
 
-TVM_REGISTER_API("relay.op.contrib._make.ndarray_size")
-.set_body_typed<Expr(Expr, DataType)>([](Expr data, DataType dtype) {
-  auto attrs = make_node<NdarraySizeAttrs>();
+TVM_REGISTER_GLOBAL("relay.op.contrib._make.ndarray_size")
+.set_body_typed([](Expr data, DataType dtype) {
+  auto attrs = make_object<NdarraySizeAttrs>();
   attrs->dtype = dtype;
   static const Op& op = Op::Get("contrib.ndarray_size");
   return CallNode::make(op, {data}, Attrs(attrs), {});

@@ -24,8 +24,9 @@
 #ifndef TOPI_CUDA_DENSE_H_
 #define TOPI_CUDA_DENSE_H_
 
-#include "tvm/operation.h"
-#include "tvm/build_module.h"
+#include "tvm/top/operation.h"
+#include "tvm/top/schedule_pass.h"
+#include "tvm/target/generic_func.h"
 #include "topi/tags.h"
 #include "topi/detail/array_utils.h"
 #include "topi/nn/dense.h"
@@ -34,6 +35,7 @@
 
 namespace topi {
 using namespace tvm;
+using namespace tvm::top;
 
 namespace cuda {
 /*!
@@ -47,10 +49,10 @@ namespace cuda {
 *
 * \return Tensor with shape [batch, out_dim]
 */
-inline tvm::Tensor dense_cuda(const Target& target,
-                              const tvm::Tensor& data,
-                              const tvm::Tensor& weight,
-                              const tvm::Tensor& bias,
+inline tvm::top::Tensor dense_cuda(const Target& target,
+                              const tvm::top::Tensor& data,
+                              const tvm::top::Tensor& weight,
+                              const tvm::top::Tensor& bias,
                               const DataType& out_dtype) {
   CHECK_EQ(data->shape.size(), 2) << "dense requires 2-D data";
   CHECK_EQ(weight->shape.size(), 2) << "dense requires 2-D weight";
@@ -66,7 +68,7 @@ inline tvm::Tensor dense_cuda(const Target& target,
     CHECK_EQ(data->dtype, out_dtype) << "Mixed precision not supported.";
     auto mm = topi::contrib::cublas_matmul(data, weight, false, true);
     if (bias.defined()) {
-      mm = tvm::compute({ batch, out_dim },
+      mm = tvm::top::compute({ batch, out_dim },
                         [&](Var i, Var j) {
                           return mm(i, j) + bias(j);
                         }, "tensor", kBroadcast);
@@ -112,15 +114,17 @@ inline Schedule schedule_dense(const Target &target, const Array<Tensor>& outs) 
       out = outs[0]->op.output(0);
       s[dense].compute_at(s[out], s[out]->op.as<ComputeOpNode>()->axis[1]);
     }
-    s[out].bind(s[out]->op.as<ComputeOpNode>()->axis[0], tvm::thread_axis(Range(), "blockIdx.y"));
-    s[out].bind(s[out]->op.as<ComputeOpNode>()->axis[1], tvm::thread_axis(Range(), "blockIdx.x"));
+    s[out].bind(s[out]->op.as<ComputeOpNode>()->axis[0],
+                tvm::top::thread_axis(Range(), "blockIdx.y"));
+    s[out].bind(s[out]->op.as<ComputeOpNode>()->axis[1],
+                tvm::top::thread_axis(Range(), "blockIdx.x"));
 
     auto tx = s[dense]->op.as<ComputeOpNode>()->reduce_axis[0];
-    auto thread_x = tvm::thread_axis(Range(), "threadIdx.x");
+    auto thread_x = tvm::top::thread_axis(Range(), "threadIdx.x");
     s[dense].bind(tx, thread_x);
     s[dense_f].compute_at(s[dense], tx);
-    s[dense].set_store_predicate(static_cast<Expr>(thread_x) == 0);
-    s[out].set_store_predicate(static_cast<Expr>(thread_x) == 0);
+    s[dense].set_store_predicate(static_cast<PrimExpr>(thread_x) == 0);
+    s[out].set_store_predicate(static_cast<PrimExpr>(thread_x) == 0);
   };
 
   std::function<void(Operation)> traverse;

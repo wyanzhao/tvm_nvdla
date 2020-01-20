@@ -100,8 +100,8 @@ if(MSVC)
 else(MSVC)
   if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     message("Build in Debug mode")
-    set(CMAKE_C_FLAGS "-O0 -g -Wall -fPIC ${CMAKE_C_FLAGS} -rdynamic")
-    set(CMAKE_CXX_FLAGS "-O0 -g -Wall -fPIC ${CMAKE_CXX_FLAGS} -rdynamic")
+    set(CMAKE_C_FLAGS "-O0 -g -Wall -fPIC ${CMAKE_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-O0 -g -Wall -fPIC ${CMAKE_CXX_FLAGS}")
   else()
     set(CMAKE_C_FLAGS "-O2 -Wall -fPIC ${CMAKE_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "-O2 -Wall -fPIC ${CMAKE_CXX_FLAGS}")
@@ -124,17 +124,23 @@ assign_source_group("Source" ${GROUP_SOURCE})
 assign_source_group("Include" ${GROUP_INCLUDE})
 
 # Source file lists
-file(GLOB COMPILER_SRCS
-    src/api/*.cc
-    src/arithmetic/*.cc
-    src/autotvm/*.cc
-    src/codegen/*.cc
-    src/lang/*.cc
-    src/pass/*.cc
-    src/op/*.cc
+file(GLOB_RECURSE COMPILER_SRCS
     src/node/*.cc
-    src/schedule/*.cc
+    src/ir/*.cc
+    src/arith/*.cc
+    src/top/*.cc
+    src/autotvm/*.cc
+    src/tir/*.cc
+    src/driver/*.cc
+    src/api/*.cc
     )
+
+file(GLOB CODEGEN_SRCS
+  src/target/*.cc
+  src/target/source/*.cc
+    )
+
+list(APPEND COMPILER_SRCS ${CODEGEN_SRCS})
 
 file(GLOB_RECURSE RELAY_OP_SRCS
     src/relay/op/*.cc
@@ -165,7 +171,7 @@ if(USE_VM_PROFILER)
   list(APPEND COMPILER_SRCS ${BACKEND_VM_PROFILER_SRCS})
 endif(USE_VM_PROFILER)
 
-file(GLOB DATATYPE_SRCS src/codegen/datatype/*.cc)
+file(GLOB DATATYPE_SRCS src/target/datatype/*.cc)
 list(APPEND COMPILER_SRCS ${DATATYPE_SRCS})
 
 
@@ -192,7 +198,7 @@ if(USE_RPC)
 endif(USE_RPC)
 
 file(GLOB STACKVM_RUNTIME_SRCS src/runtime/stackvm/*.cc)
-file(GLOB STACKVM_CODEGEN_SRCS src/codegen/stackvm/*.cc)
+file(GLOB STACKVM_CODEGEN_SRCS src/target/stackvm/*.cc)
 list(APPEND COMPILER_SRCS ${STACKVM_CODEGEN_SRCS})
 if(USE_STACKVM_RUNTIME)
   message(STATUS "Build with stackvm support in runtime...")

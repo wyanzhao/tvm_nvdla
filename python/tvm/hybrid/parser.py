@@ -37,6 +37,8 @@ from ..tensor import Tensor, Operation
 from .. import _api_internal as _tvm_internal
 from .. import expr as _expr
 from .. import make as _make
+from .. import stmt as _stmt
+
 from .. import api  as _api
 from .. import ir_pass as _ir_pass
 
@@ -48,11 +50,7 @@ def concat_list_to_block(lst):
     n = len(lst)
     if n == 1:
         return lst[0]
-    body = lst[n - 1]
-    for i in range(1, n):
-        stmt = lst[n - 1 - i]
-        body = _make.Block(stmt, body)
-    return body
+    return _stmt.SeqStmt(lst)
 
 
 def visit_list_to_block(visit, lst):
@@ -327,7 +325,7 @@ class HybridParser(ast.NodeVisitor):
 
         _internal_assert(len(node.targets) == 1, "So far only one-valued assignment is supported!")
         lhs = node.targets[0]
-        if isinstance(rhs, _expr.Expr):
+        if isinstance(rhs, _expr.PrimExpr):
             rhs = _ir_pass.Simplify(rhs)
         if isinstance(lhs, ast.Name):
             #TODO: support defined intermediate buffer later
@@ -388,7 +386,7 @@ class HybridParser(ast.NodeVisitor):
                 if isinstance(i, numbers.Integral):
                     arr = arr[i]
                 else:
-                    _internal_assert(isinstance(i, (_expr.IntImm, _expr.UIntImm)), \
+                    _internal_assert(isinstance(i, (_expr.IntImm,)), \
                                      "All indices are supposed to be constants")
                     arr = arr[i.value]
             return arr
@@ -415,7 +413,7 @@ class HybridParser(ast.NodeVisitor):
         cond = _ir_pass.CanonicalSimplify(self.visit(node.test))
 
         # Return no IfThenElse if proven
-        if isinstance(cond, _expr.UIntImm):
+        if isinstance(cond, _expr.IntImm):
             if cond.value:
                 return visit_list_to_block(self.visit, node.body)
             if node.orelse:

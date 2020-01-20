@@ -26,11 +26,13 @@
 
 #include "topi/tags.h"
 #include "topi/detail/fuse.h"
-#include "tvm/operation.h"
-#include "tvm/build_module.h"
+#include "tvm/top/operation.h"
+#include "tvm/top/schedule_pass.h"
+#include "tvm/target/generic_func.h"
 
 namespace topi {
 using namespace tvm;
+using namespace tvm::top;
 
 namespace cuda {
 /*!
@@ -74,13 +76,13 @@ Schedule ScheduleReduce(const Target& target,
       // Don't know why.
       num_thread = 16;
     }
-    block_x = tvm::thread_axis(Range(), "blockIdx.x");
-    thread_x = tvm::thread_axis(Range(0, num_thread), "threadIdx.x");
-    thread_y = tvm::thread_axis(Range(0, num_thread), "threadIdx.y");
+    block_x = tvm::top::thread_axis(Range(), "blockIdx.x");
+    thread_x = tvm::top::thread_axis(Range(0, num_thread), "threadIdx.x");
+    thread_y = tvm::top::thread_axis(Range(0, num_thread), "threadIdx.y");
   } else {
     all_reduce = true;
     num_thread = target->max_num_threads;
-    thread_x = tvm::thread_axis(Range(0, num_thread), "threadIdx.x");
+    thread_x = tvm::top::thread_axis(Range(0, num_thread), "threadIdx.x");
   }
 
   auto fused_reduce = detail::Fuse(out_stage, out_stage->op.as<ComputeOpNode>()->reduce_axis);
@@ -125,7 +127,7 @@ Schedule ScheduleReduce(const Target& target,
     }
   }
 
-  stage_real.set_store_predicate(static_cast<Expr>(thread_x) == 0);
+  stage_real.set_store_predicate(static_cast<PrimExpr>(thread_x) == 0);
   return sch;
 }
 
