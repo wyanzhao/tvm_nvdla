@@ -32,7 +32,7 @@ int main(void)
     * (nvdla_lib->create_float_compute_tensor("data_0", {1, 1, 12, 8})));
 
     // Create weights.
-    nvdla_lib->create_float_weight_operator("conv1_w_0", {13, 1, 1, 1}, "/home/dev/Workspace/tvm/nvdla/tensor1.pb");
+    nvdla_lib->create_float_weight_tensor_from_file("conv1_w_0", {13, 1, 1, 1}, "/home/dev/Workspace/tvm/nvdla/tensor1.pb");
 
     // create nodes (layers)
     onnc::Conv* conv_op1 = nvdla_lib->create_compute_operator<Conv>({"data_0", "conv1_w_0"});
@@ -44,7 +44,7 @@ int main(void)
 
     conv_op1->addOutput(*nvdla_lib->create_float_compute_tensor("output1", {1, 13, 12, 8}));
 
-    nvdla_lib->create_float_weight_operator("conv2_w_0", {8, 13, 2, 8}, "/home/dev/Workspace/tvm/nvdla/tensor2.pb");
+    nvdla_lib->create_float_weight_tensor_from_file("conv2_w_0", {8, 13, 2, 8}, "/home/dev/Workspace/tvm/nvdla/tensor2.pb");
     onnc::Conv* conv_op2 = nvdla_lib->create_compute_operator<Conv>({"output1", "conv2_w_0"});
         //set conv2 attributes
     {

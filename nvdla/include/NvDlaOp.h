@@ -1,7 +1,7 @@
-#ifndef NVDLA_NVDLA_LIB_NVDLA_OP_H
-#define NVDLA_NVDLA_LIB_NVDLA_OP_H
+#ifndef NVDLA_OP_H
+#define NVDLA_OP_H
 
-#include "NvDlaMeta.h"
+#include <NvDlaMeta.h>
 
 #include <onnc/IR/Compute/Relu.h>
 #include <onnc/IR/Compute/Conv.h>

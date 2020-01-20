@@ -5,15 +5,15 @@
 // See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
-#ifndef NVDLA_NVDLA_LIB_NVDLA_META_H
-#define NVDLA_NVDLA_LIB_NVDLA_META_H
+#ifndef NVDLA_META_H
+#define NVDLA_META_H
 
-#include "NvDlaDefine.h"
-#include "dla_interface.h"
-#include "emu_interface.h"
-#include "nvdla/ILoadable.h"
-#include "priv/Loadable.h"
-#include "priv/loadable_generated.h"
+#include <NvDlaDefine.h>
+#include <dla_interface.h>
+#include <emu_interface.h>
+#include <nvdla/ILoadable.h>
+#include <priv/Loadable.h>
+#include <priv/loadable_generated.h>
 
 
 #include <onnc/IR/Compute/Conv.h>

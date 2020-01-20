@@ -5,8 +5,8 @@
 // See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
-#ifndef NVDLA_NVDLA_LIB_UTIL_H_INCLUDED
-#define NVDLA_NVDLA_LIB_UTIL_H_INCLUDED
+#ifndef NVDLA_UTIL_H_
+#define NVDLA_UTIL_H_
 
 #include <onnc/IR/Compute/Conv.h>
 #include <onnc/IR/Compute/InputOperator.h>

@@ -5,7 +5,7 @@
 // See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
-#include "NvDlaMeta.h"
+#include <NvDlaMeta.h>
 
 #include <onnc/Diagnostic/MsgHandling.h>
 

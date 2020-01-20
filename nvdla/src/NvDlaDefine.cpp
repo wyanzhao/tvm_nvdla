@@ -5,10 +5,10 @@
 // See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
-#include "NvDlaDefine.h"
+#include <NvDlaDefine.h>
 
-#include "NvDlaMeta.h"
-#include "half.hpp"
+#include <NvDlaMeta.h>
+#include <half.hpp>
 
 #include <algorithm>
 #include <cassert>

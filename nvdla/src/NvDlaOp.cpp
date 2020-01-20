@@ -1,5 +1,5 @@
-#include "NvDlaOp.h"
-#include "NvDlaUtil.h"
+#include <NvDlaOp.h>
+#include <NvDlaUtil.h>
 
 #include <onnc/Support/Algorithm.h>
 #include <onnc/Support/IOStream.h>
@@ -1484,6 +1484,7 @@ void NvDlaOp::set_default_strides(T &pOp)
   auto input = pOp.getInput(0);
   std::vector<int64_t> v(input->getNumOfDimensions() - 2, 1);
 
+  #ifdef NVDLA_DEBUG
   std::cout<< "default strides"<< std::endl;
   for(auto i : v)
   {
@@ -1491,6 +1492,7 @@ void NvDlaOp::set_default_strides(T &pOp)
     std::cout<< " ,";
   }
   std::cout<< std::endl;
+  #endif
   
   pOp.setStrides(std::move(v));
 }
@@ -1502,6 +1504,7 @@ void NvDlaOp::set_default_dilations(T &pOp)
     auto input = pOp.getInput(0);
     std::vector<int64_t> v(input->getNumOfDimensions() - 2, 1);
     
+    #ifdef NVDLA_DEBUG
     std::cout<< "default dilations"<< std::endl;
     for(auto i: v)
     {
@@ -1509,6 +1512,7 @@ void NvDlaOp::set_default_dilations(T &pOp)
       std::cout<< " ,";
     }
     std::cout<< std::endl;
+    #endif
 
     pOp.setDilations(std::move(v));
 }
@@ -1524,6 +1528,7 @@ void NvDlaOp::set_default_kernel_shape(T &pOp) {
         v[i] = dimensions[i + 2];
     }
     
+    #ifdef NVDLA_DEBUG
     std::cout<< "default kernel shape:"<< std::endl;
     for(auto i : v)
     {
@@ -1531,6 +1536,7 @@ void NvDlaOp::set_default_kernel_shape(T &pOp) {
       std::cout<< " ,";
     }
     std::cout<< std::endl;
+    #endif
 
     pOp.setKernelShape(v);
 }
@@ -1543,6 +1549,7 @@ void NvDlaOp::set_default_pads(T &pOp)
 
     std::vector<int64_t> v(kernel_shape.vector().size() * 2, 0);
     
+    #ifdef NVDLA_DEBUG
     std::cout<< "default pads"<< std::endl;
     for(auto i: v)
     { 
@@ -1550,6 +1557,7 @@ void NvDlaOp::set_default_pads(T &pOp)
       std::cout<< " ,";
     }
     std::cout<< std::endl;
+    #endif
 
     pOp.setPads(std::move(v));
 }

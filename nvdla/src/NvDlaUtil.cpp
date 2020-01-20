@@ -6,7 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "NvDlaUtil.h"
+#include <NvDlaUtil.h>
 
 #include <onnc/IR/Compute/Initializer.h>
 #include <onnc/Support/Casting.h>

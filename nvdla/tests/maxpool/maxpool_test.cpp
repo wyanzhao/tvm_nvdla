@@ -33,7 +33,7 @@ int main(void)
     * (nvdla_lib->create_float_compute_tensor("data_0", {1, 1, 4, 3})));
 
     // Create weights.
-    nvdla_lib->create_float_weight_operator("conv1_w_0", {2, 1, 1, 1}, "/home/dev/Workspace/tvm/nvdla/tensor1.pb");
+    nvdla_lib->create_float_weight_tensor_from_file("conv1_w_0", {2, 1, 1, 1}, "/home/dev/Workspace/tvm/nvdla/tensor1.pb");
 
     {
     // create nodes (layers)

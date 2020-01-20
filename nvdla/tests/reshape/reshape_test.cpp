@@ -33,7 +33,7 @@ int main(void)
     cg->addOperator<InputOperator>()->setTensor(
     * (nvdla_lib->create_float_compute_tensor("data_0", {1, 1, 16, 16})));
     // Create weights.
-    nvdla_lib->create_float_weight_operator("conv1_w_0", {1, 1, 1, 1}, "/home/dev/Workspace/tvm/nvdla/tensor1.pb");
+    nvdla_lib->create_float_weight_tensor_from_file("conv1_w_0", {1, 1, 1, 1}, "/home/dev/Workspace/tvm/nvdla/tensor1.pb");
 
     {
       // create nodes (layers)
@@ -46,14 +46,14 @@ int main(void)
 
 
     {
-    nvdla_lib->create_float_weight_operator("reshape_data0", {1, 1, 16, 16}, "/home/dev/Workspace/tvm/nvdla/tensor2.pb");
-    nvdla_lib->create_weight_operator_with_values<Int64Tensor>("reshape_dummy_1", {2}, {1, 256});
+    nvdla_lib->create_float_weight_tensor_from_file("reshape_data0", {1, 1, 16, 16}, "/home/dev/Workspace/tvm/nvdla/tensor2.pb");
+    nvdla_lib->create_weight_operator<Int64Tensor>("reshape_dummy_1", {1, 256});
     onnc::Reshape* reshape_op1 = nvdla_lib->create_compute_operator<Reshape>({"reshape_data0", "reshape_dummy_1"});
     reshape_op1->addOutput(*nvdla_lib->create_float_compute_tensor("reshaped1", {1, 256}));
     }
 
     {
-    nvdla_lib->create_weight_operator_with_values<Int64Tensor>("reshape_dummy_2", {4}, {1, 1, 16, 16});
+    nvdla_lib->create_weight_operator<Int64Tensor>("reshape_dummy_2", {1, 1, 16, 16});
     onnc::Reshape* reshape_op2 = nvdla_lib->create_compute_operator<Reshape>({"reshaped1", "reshape_dummy_2"});
     reshape_op2->addOutput(*nvdla_lib->create_float_compute_tensor("output2", {1, 1, 16, 16}));
 

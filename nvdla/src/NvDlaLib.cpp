@@ -1,6 +1,6 @@
-#include "NvDlaLib.h"
-#include "NvDlaUtil.h"
-#include "NvDlaMeta.h"
+#include <NvDlaLib.h>
+#include <NvDlaUtil.h>
+#include <NvDlaMeta.h>
 
 #include <onnc/IR/Compute/Initializer.h>
 #include <onnc/IR/Compute/InputOperator.h>
@@ -23,6 +23,14 @@ NvDlaLib::~NvDlaLib()
   delete m_pModule;
   delete m_pCG;
 }
+
+
+Tensor* NvDlaLib::create_float_compute_tensor(const StringRef& pName,
+                         const Tensor::Dimensions& pDims)
+{
+  return this->create_compute_tensor<FloatTensor>(pName, pDims);
+}
+
 
 int NvDlaLib::submit_event(int task_id, int event_type)
 {
@@ -548,14 +556,34 @@ CbufAllocType NvDlaLib::getCbufAllocType(const NvDlaCubeInfo& xinfo, const NvDla
   return CbufAllocType::kUnfeasible;
 }                                
 
-Tensor* NvDlaLib::create_float_compute_tensor(const StringRef& pName,
-                         const Tensor::Dimensions& pDims)
+void
+NvDlaLib::create_float_weight_tensor_from_numpy(const std::string& pName,
+                          const Tensor::Dimensions& pDims, void* data)
 {
-  return this->create_compute_tensor<FloatTensor>(pName, pDims);
+  assert(data != nullptr);
+
+  Initializer* init = m_pCG->addOperator<Initializer>(pName);
+  Tensor* value = this->create_compute_tensor<FloatTensor>(pName, pDims);
+
+  float * weight = (float *)data;
+
+  size_t numElems = 1;
+  for(auto i : pDims)
+  {
+    numElems *= i;
+  }
+
+  ((FloatTensor *)value)->getValues().resize(numElems); 
+  for (size_t i = 0; i < numElems; ++i) {
+    ((FloatTensor *)value)->getValues()[i] = weight[i];
+    printf("%f\n", ((FloatTensor *)value)->getValues()[i]);
+  }
+  
+  init->setTensor(*value);
 }
 
 void
-NvDlaLib::create_float_weight_operator(const std::string& pName,
+NvDlaLib::create_float_weight_tensor_from_file(const std::string& pName,
                           const Tensor::Dimensions& pDims, const std::string& weight_path)
 {
   assert(!weight_path.empty());

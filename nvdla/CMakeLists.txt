@@ -12,14 +12,15 @@ include_directories(${PROTOBUF_INCLUDE_DIR})
 
 #  glog
 #find_package(Glog REQUIRED)
-
 include_directories(${GLOG_INCLUDE_DIR})
 link_directories(${GLOG_LIBRARY_DIR})
 
 # include directories
 include_directories(${CMAKE_INCLUDE_PATH})
 include_directories("nvdla_lib/include")
-include_directories("nvdla_lib")
+include_directories("include")
+include_directories("/home/dev/Workspace/tvm/include")
+include_directories("/home/dev/Workspace/tvm/3rdparty/dlpack/include")
 
 # initial variblles
 set(ONNC_LINKER_LIBS 
@@ -40,8 +41,8 @@ set(ONNX_LINKER_INCLUDE
 # Generic compilation options
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     message("Build in Debug mode")
-    set(CMAKE_C_FLAGS "-O0 -g -Wall -fPIC ${CMAKE_C_FLAGS} -rdynamic")
-    set(CMAKE_CXX_FLAGS "-O0 -g -Wall -fPIC ${CMAKE_CXX_FLAGS} -rdynamic")
+    set(CMAKE_C_FLAGS "-O0 -g -Wall -fPIC ${CMAKE_C_FLAGS} -rdynamic -DNVDLA_DEBUG")
+    set(CMAKE_CXX_FLAGS "-O0 -g -Wall -fPIC ${CMAKE_CXX_FLAGS} -rdynamic -DNVDLA_DEBUG")
 else()
     set(CMAKE_C_FLAGS "-O2 -Wall -fPIC ${CMAKE_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "-O2 -Wall -fPIC ${CMAKE_CXX_FLAGS}")
@@ -66,8 +67,9 @@ set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
 file(GLOB COMPILER_SRCS
     nvdla_lib/*.cpp
     nvdla_lib/include/*.hpp
-    nvdla_lib/*.c
+    src/*.cpp
     )
+list(REMOVE_ITEM COMPILER_SRCS "src/NvDlaRuntime.cpp")
 
 # Source file lists
 file(GLOB RELU_TEST_SRCS
@@ -89,13 +91,16 @@ file(GLOB LENET_TEST_SRCS
     tests/lenet/lenet_test.cpp)
 
 file(GLOB RUNTIME_SRCS
-    nvdla_lib/nvdla_lib/NvDlaRuntime.cpp)
+    src/NvDlaRuntime.cpp)
 
 file(GLOB RELU_TEST_SRCS_C
-    tests/relu/relu_test.c)   
+    tests/relu/relu_test.c)
+
+file(GLOB TEST_ADD_FLOAT_WEIGHT_TENSOR
+    tests/unittest/test_add_float_weight_tensor.c)   
 
 # generate nvdla library runtime 
-add_library(nvdla_library STATIC ${COMPILER_SRCS} ${RUNTIME_SRCS})
+add_library(nvdla_library SHARED ${COMPILER_SRCS} ${RUNTIME_SRCS})
 
 # generate executable
 add_executable(relu_test ${COMPILER_SRCS} ${RELU_TEST_SRCS})
@@ -105,8 +110,8 @@ add_executable(maxpool_test ${COMPILER_SRCS} ${MAXPOOL_TEST_SRCS})
 add_executable(reshape_test ${COMPILER_SRCS} ${RESHAPE_TEST_SRCS})
 add_executable(lenet_test ${COMPILER_SRCS} ${LENET_TEST_SRCS})
 add_executable(relu_test_c ${RELU_TEST_SRCS_C})
+add_executable(test_add_float_weight_tensor ${TEST_ADD_FLOAT_WEIGHT_TENSOR})
 set_source_files_properties(relu_test_c.c PROPERTIES LANGUAGE C)
-
 
 # link libraries
 target_link_libraries(relu_test ${ONNC_LINKER_LIBS} 
@@ -146,6 +151,7 @@ ${ONNX_PROTO_LINKER_LIBS}
 ${PROTOBUF_LIBRARIES})
 
 target_link_libraries(relu_test_c nvdla_library)
+target_link_libraries(test_add_float_weight_tensor nvdla_library)
 
 # Related headers
 target_include_directories(relu_test 
@@ -185,7 +191,7 @@ target_include_directories(lenet_test
 )
 
 target_include_directories(nvdla_library 
-    PUBLIC 
+    PUBLIC
     ${ONNC_LINKER_INCLUDE}
     ${ONNX_LINKER_INCLUDE}
 )

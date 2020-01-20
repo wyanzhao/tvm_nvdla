@@ -2,7 +2,7 @@
 
 int main()
 {
-    NvDlaInit("ReluTest");
+    NvDlaInit("ConvTest");
     
     void* input_tensor = AddFloatTensor("data0", 4, 1, 1, 3, 3);
 

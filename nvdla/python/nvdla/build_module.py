@@ -61,10 +61,10 @@ def build_config(debug_flag=0, **kwargs):
           vta_module = tvm.build(s, ...)
     """
     def init_nvdla_lib(stmt):
-        debug = tvm.call_extern(
+        init = tvm.call_extern(
             "int32", "NvDlaInit", "NvDlaBuild")
 
-        return tvm.make.stmt_seq(debug, stmt)
+        return tvm.make.stmt_seq(init, stmt)
 
 
     pass_list = [(0, init_nvdla_lib)]

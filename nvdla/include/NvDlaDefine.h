@@ -5,12 +5,12 @@
 // See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
-#ifndef NVDLA_NVDLA_LIB_NVDLA_DEFINE_H
-#define NVDLA_NVDLA_LIB_NVDLA_DEFINE_H
+#ifndef NVDLA_DEFINE_H
+#define NVDLA_DEFINE_H
 
-#include "Types.h"
-#include "dla_interface.h"
-#include "priv/loadable_generated.h"
+#include <Types.h>
+#include <dla_interface.h>
+#include <priv/loadable_generated.h>
 
 #include <onnc/IR/Compute/Tensor.h>
 

@@ -5,11 +5,11 @@
 // See LICENSE.TXT for details.
 //
 //===----------------------------------------------------------------------===//
-#ifndef NVDLA_NVDLA_LIB_TYPES_H_INCLUDED
-#define NVDLA_NVDLA_LIB_TYPES_H_INCLUDED
+#ifndef TYPES_H_
+#define TYPES_H_
 
 #include <cstdint>
-#include "NvDlaDefine.h"
+#include <NvDlaDefine.h>
 
 namespace nvdla {
 
