@@ -30,7 +30,7 @@
 #include <tvm/relay/analysis.h>
 #include <tvm/relay/attrs/debug.h>
 #include <tvm/relay/feature.h>
-#include <tvm/driver/driver.h>
+#include <tvm/driver/driver_api.h>
 
 #include "compile_engine.h"
 
@@ -47,8 +47,8 @@ InterpreterClosure::InterpreterClosure(tvm::Map<Var, ObjectRef> env,
   data_ = std::move(n);
 }
 
-TVM_STATIC_IR_FUNCTOR(NodePrinter, vtable)
-.set_dispatch<InterpreterClosureObj >([](const ObjectRef& ref, NodePrinter* p) {
+TVM_STATIC_IR_FUNCTOR(ReprPrinter, vtable)
+.set_dispatch<InterpreterClosureObj >([](const ObjectRef& ref, ReprPrinter* p) {
   auto* node = static_cast<const InterpreterClosureObj*>(ref.get());
   p->stream << "InterpreterClosureNode(" << node->func << ", " << node->env << ")";
 });
@@ -68,8 +68,8 @@ RecClosure::RecClosure(InterpreterClosure clos, Var bind) {
   data_ = std::move(n);
 }
 
-TVM_STATIC_IR_FUNCTOR(NodePrinter, vtable)
-.set_dispatch<RecClosureObj>([](const ObjectRef& ref, NodePrinter* p) {
+TVM_STATIC_IR_FUNCTOR(ReprPrinter, vtable)
+.set_dispatch<RecClosureObj>([](const ObjectRef& ref, ReprPrinter* p) {
     auto* node = static_cast<const RecClosureObj*>(ref.get());
     p->stream << "RecClosureObj(" << node->clos << ")";
   });
@@ -87,8 +87,8 @@ TVM_REGISTER_GLOBAL("relay._make.RefValue")
 
 TVM_REGISTER_NODE_TYPE(RefValueObj);
 
-TVM_STATIC_IR_FUNCTOR(NodePrinter, vtable)
-.set_dispatch<RefValueObj>([](const ObjectRef& ref, NodePrinter* p) {
+TVM_STATIC_IR_FUNCTOR(ReprPrinter, vtable)
+.set_dispatch<RefValueObj>([](const ObjectRef& ref, ReprPrinter* p) {
     auto* node = static_cast<const RefValueObj*>(ref.get());
     p->stream << "RefValueObj(" << node->value << ")";
   });
@@ -111,8 +111,8 @@ TVM_REGISTER_GLOBAL("relay._make.ConstructorValue")
 
 TVM_REGISTER_NODE_TYPE(ConstructorValueObj);
 
-TVM_STATIC_IR_FUNCTOR(NodePrinter, vtable)
-.set_dispatch<ConstructorValueObj>([](const ObjectRef& ref, NodePrinter* p) {
+TVM_STATIC_IR_FUNCTOR(ReprPrinter, vtable)
+.set_dispatch<ConstructorValueObj>([](const ObjectRef& ref, ReprPrinter* p) {
   auto* node = static_cast<const ConstructorValueObj*>(ref.get());
   p->stream << "ConstructorValueObj(" << node->tag << ","
             << node->fields << ")";
@@ -529,7 +529,7 @@ class Interpreter :
         if (is_dyn) {
           auto sh = out_shapes[i];
           auto tt = Downcast<TensorType>(rtype->fields[i]);
-          fields.push_back(fset_output(i, TensorTypeNode::make(sh, tt->dtype)));
+          fields.push_back(fset_output(i, TensorType(sh, tt->dtype)));
         } else {
           fields.push_back(fset_output(i, rtype->fields[i]));
         }
@@ -542,7 +542,7 @@ class Interpreter :
         CHECK_EQ(out_shapes.size(), 1);
         auto sh = out_shapes[0];
         auto tt = Downcast<TensorType>(ret_type);
-        out_tensor = fset_output(0, TensorTypeNode::make(sh, tt->dtype));
+        out_tensor = fset_output(0, TensorType(sh, tt->dtype));
       } else {
         out_tensor = fset_output(0, ret_type);
       }
