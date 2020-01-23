@@ -30,13 +30,10 @@ set(ONNX_LINKER_LIBS
 set(ONNX_PROTO_LINKER_LIBS 
 "/home/dev/Workspace/onnc-umbrella/build-onnx/libonnx_proto.a")
 set(ONNC_LINKER_INCLUDE 
-"/home/dev/Workspace/onnc-umbrella/onncroot/include")
-set(ONNX_LINKER_INCLUDE 
+"/home/dev/Workspace/onnc-umbrella/onncroot/include"
+"/home/dev/Workspace/onnc-umbrella/src/include"
+"/home/dev/Workspace/onnc-umbrella/install-normal/home/dev/Workspace/onnc-umbrella/onnc/include"
 "/home/dev/Workspace/onnc-umbrella/build-normal/include")
-set(ONNX_LINKER_INCLUDE 
-"/home/dev/Workspace/onnc-umbrella/src/include")
-set(ONNX_LINKER_INCLUDE 
-"/home/dev/Workspace/onnc-umbrella/install-normal/home/dev/Workspace/onnc-umbrella/onnc/include")
 
 # Generic compilation options
 if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
@@ -68,130 +65,64 @@ file(GLOB COMPILER_SRCS
     nvdla_lib/*.cpp
     nvdla_lib/include/*.hpp
     src/*.cpp
+    src/opt_pass/*.cpp
     )
 list(REMOVE_ITEM COMPILER_SRCS "src/NvDlaRuntime.cpp")
 
 # Source file lists
-file(GLOB RELU_TEST_SRCS
-    tests/relu/relu_test.cpp)
-
-file(GLOB CONV_TEST_SRCS
-    tests/conv/conv_test.cpp)
-
-file(GLOB ADD_TEST_SRCS
-    tests/add/add_test.cpp)
-
-file(GLOB MAXPOOL_TEST_SRCS
-    tests/maxpool/maxpool_test.cpp)
-
-file(GLOB RESHAPE_TEST_SRCS
-    tests/reshape/reshape_test.cpp) 
-
-file(GLOB LENET_TEST_SRCS
-    tests/lenet/lenet_test.cpp)
-
 file(GLOB RUNTIME_SRCS
     src/NvDlaRuntime.cpp)
 
 file(GLOB RELU_TEST_SRCS_C
     tests/relu/relu_test.c)
 
+file(GLOB GLOBAL_AVERAGEPOOL_TEST_SRCS_C
+    tests/global_average_pool_test/global_average_pool.c)
+
+file(GLOB AVERAGEPOOL_TEST_SRCS_C
+    tests/averagepool/averagepool_test.c)
+
+file(GLOB GEMM_TEST_SRCS_C 
+    tests/gemm/gemm_test.c)
+
+file(GLOB BATCHNORM_TEST_SRCS_C
+    tests/batchnorm/batchnorm_test.c)
+
+file(GLOB RESHAPE_TEST_SRCS_C 
+    tests/reshape/reshape_test.c)
+
 file(GLOB TEST_ADD_FLOAT_WEIGHT_TENSOR
     tests/unittest/test_add_float_weight_tensor.c)   
 
 # generate nvdla library runtime 
-add_library(nvdla_library SHARED ${COMPILER_SRCS} ${RUNTIME_SRCS})
+add_library(nvdla_library STATIC ${COMPILER_SRCS} ${RUNTIME_SRCS})
 
 # generate executable
-add_executable(relu_test ${COMPILER_SRCS} ${RELU_TEST_SRCS})
-add_executable(conv_test ${COMPILER_SRCS} ${CONV_TEST_SRCS})
-add_executable(add_test ${COMPILER_SRCS} ${ADD_TEST_SRCS})
-add_executable(maxpool_test ${COMPILER_SRCS} ${MAXPOOL_TEST_SRCS})
-add_executable(reshape_test ${COMPILER_SRCS} ${RESHAPE_TEST_SRCS})
-add_executable(lenet_test ${COMPILER_SRCS} ${LENET_TEST_SRCS})
 add_executable(relu_test_c ${RELU_TEST_SRCS_C})
 add_executable(test_add_float_weight_tensor ${TEST_ADD_FLOAT_WEIGHT_TENSOR})
-set_source_files_properties(relu_test_c.c PROPERTIES LANGUAGE C)
+add_executable(averagepool_test_c ${AVERAGEPOOL_TEST_SRCS_C})
+add_executable(gemm_test_c ${GEMM_TEST_SRCS_C})
+add_executable(reshape_test_c ${RESHAPE_TEST_SRCS_C})
+add_executable(batchnorm_test_c ${BATCHNORM_TEST_SRCS_C})
+add_executable(global_average_pool_test_c ${GLOBAL_AVERAGEPOOL_TEST_SRCS_C})
 
 # link libraries
-target_link_libraries(relu_test ${ONNC_LINKER_LIBS} 
-${ONNX_LINKER_LIBS} 
-${ONNX_PROTO_LINKER_LIBS}
-${PROTOBUF_LIBRARIES})
-
-target_link_libraries(conv_test ${ONNC_LINKER_LIBS} 
-${ONNX_LINKER_LIBS} 
-${ONNX_PROTO_LINKER_LIBS}
-${PROTOBUF_LIBRARIES})
-
-target_link_libraries(add_test ${ONNC_LINKER_LIBS} 
-${ONNX_LINKER_LIBS} 
-${ONNX_PROTO_LINKER_LIBS}
-${PROTOBUF_LIBRARIES})
-
-target_link_libraries(maxpool_test ${ONNC_LINKER_LIBS} 
-${ONNX_LINKER_LIBS} 
-${ONNX_PROTO_LINKER_LIBS}
-${PROTOBUF_LIBRARIES})
-
-target_link_libraries(reshape_test ${ONNC_LINKER_LIBS} 
-${ONNX_LINKER_LIBS} 
-${ONNX_PROTO_LINKER_LIBS}
-${PROTOBUF_LIBRARIES})
-
-target_link_libraries(lenet_test ${ONNC_LINKER_LIBS} 
-${ONNX_LINKER_LIBS} 
-${ONNX_PROTO_LINKER_LIBS}
-${PROTOBUF_LIBRARIES})
-
-
-target_link_libraries(nvdla_library ${ONNC_LINKER_LIBS} 
+target_link_libraries(nvdla_library
+${ONNC_LINKER_LIBS} 
 ${ONNX_LINKER_LIBS} 
 ${ONNX_PROTO_LINKER_LIBS}
 ${PROTOBUF_LIBRARIES})
 
 target_link_libraries(relu_test_c nvdla_library)
+target_link_libraries(averagepool_test_c nvdla_library)
+target_link_libraries(gemm_test_c nvdla_library)
+target_link_libraries(reshape_test_c nvdla_library)
+target_link_libraries(batchnorm_test_c nvdla_library)
 target_link_libraries(test_add_float_weight_tensor nvdla_library)
+target_link_libraries(global_average_pool_test_c nvdla_library)
 
 # Related headers
-target_include_directories(relu_test 
-    PUBLIC 
-    ${ONNC_LINKER_INCLUDE}
-    ${ONNX_LINKER_INCLUDE}
-)
-
-target_include_directories(conv_test 
-    PUBLIC 
-    ${ONNC_LINKER_INCLUDE}
-    ${ONNX_LINKER_INCLUDE}
-)
-
-target_include_directories(add_test 
-    PUBLIC 
-    ${ONNC_LINKER_INCLUDE}
-    ${ONNX_LINKER_INCLUDE}
-)
-
-target_include_directories(maxpool_test 
-    PUBLIC 
-    ${ONNC_LINKER_INCLUDE}
-    ${ONNX_LINKER_INCLUDE}
-)
-
-target_include_directories(reshape_test 
-    PUBLIC 
-    ${ONNC_LINKER_INCLUDE}
-    ${ONNX_LINKER_INCLUDE}
-)
-
-target_include_directories(lenet_test 
-    PUBLIC 
-    ${ONNC_LINKER_INCLUDE}
-    ${ONNX_LINKER_INCLUDE}
-)
-
 target_include_directories(nvdla_library 
     PUBLIC
     ${ONNC_LINKER_INCLUDE}
-    ${ONNX_LINKER_INCLUDE}
 )

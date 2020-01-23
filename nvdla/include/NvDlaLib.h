@@ -4,6 +4,13 @@
 #include <NvDlaOp.h>
 #include <NvDlaDefine.h>
 
+// OPT PASS
+#include <opt_pass/replace_gemm_by_conv.h>
+#include <opt_pass/propagate_const_with_diff_shape.h>
+#include <opt_pass/expand_batchnormalization.h>
+#include <opt_pass/divide_global_api_into_aps.h>
+#include <opt_pass/nvdla_collect_reshape_info_pass.h>
+
 #include <onnc/ADT/StringList.h>
 #include <onnc/IR/Compute/Initializer.h>
 #include <onnc/IR/Compute/InputOperator.h>
@@ -92,8 +99,6 @@ private:
   void nvdla_filegen();
 
   // optimize pass
-  void propagate_const_with_diff_shape();
-
 protected:
   NvDlaConstants m_nvdla_constants;
   onnc::Module* m_pModule;

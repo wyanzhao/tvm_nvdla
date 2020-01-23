@@ -7,6 +7,12 @@
 #include <onnc/IR/Compute/Conv.h>
 #include <onnc/IR/Compute/Add.h>
 #include <onnc/IR/Compute/MaxPool.h>
+#include <onnc/IR/Compute/AveragePool.h>
+#include <onnc/IR/Compute/GlobalAveragePool.h>
+#include <onnc/IR/Compute/Gemm.h>
+#include <onnc/IR/Compute/Mul.h>
+#include <onnc/IR/Compute/BatchNormalization.h>
+#include <onnc/IR/Compute/GlobalAveragePool.h>
 
 #include <onnc/IR/Compute/Initializer.h>
 #include <onnc/IR/Compute/InputOperator.h>
@@ -32,9 +38,19 @@ public:
   void add (const onnc::Add & pOp);
   void max_pool(const onnc::MaxPool& pOp);
   void reshape(const onnc::Reshape& pOp) {};
+  void average_pool(const onnc::AveragePool& pOp);
+  void gemm (const onnc::Gemm& pOp) {};
+  void mul (const onnc::Mul& pOp);
+  void batchnorm (const onnc::BatchNormalization &pOp) {};
+  void global_average_pool (const onnc::GlobalAveragePool& pOp) {};
   
+  void set_default_attributs(GlobalAveragePool &pOp) {};
+  void set_default_attributs(BatchNormalization &pOp) {};
+  void set_default_attributs(Gemm &pOp) {}
   void set_default_attributs(Conv &pOp);
+  void set_default_attributs(Mul &pOp) {};
   void set_default_attributs(MaxPool &pOp);
+  void set_default_attributs(AveragePool &pOp);
   void set_default_attributs(Relu &pOp) {}
   void set_default_attributs(Reshape &pOp) {}
   void set_default_attributs(Add &pOp) {}
