@@ -43,13 +43,10 @@
 #include <topi/nn/mapping.h>
 #include <topi/nn/pooling.h>
 #include <topi/nn/softmax.h>
-#include <topi/nn/upsampling.h>
-#include <topi/nn/l2_normalize.h>
 #include <topi/nn/local_response_norm.h>
 #include <topi/nn/batch_matmul.h>
 
 #include <topi/vision/reorg.h>
-#include <topi/image/resize.h>
 #include <topi/generic/default.h>
 #include <topi/generic/extern.h>
 #include <topi/generic/injective.h>
@@ -451,12 +448,6 @@ TVM_REGISTER_GLOBAL("topi.one_hot")
   *rv = one_hot(args[0], args[1], args[2], depth, axis, dtype);
   });
 
-/* Ops from nn/upsampling.h */
-TVM_REGISTER_GLOBAL("topi.nn.upsampling")
-.set_body([](TVMArgs args, TVMRetValue *rv) {
-  *rv = nn::upsampling(args[0], args[1], args[2], args[3]);
-  });
-
 /* Ops from nn/bnn.h */
 TVM_REGISTER_GLOBAL("topi.nn.binarize_pack")
 .set_body([](TVMArgs args, TVMRetValue *rv) {
@@ -562,12 +553,6 @@ TVM_REGISTER_GLOBAL("topi.nn.log_softmax")
   *rv = nn::log_softmax(args[0]);
   });
 
-/* Ops from nn/l2_normalize.h */
-TVM_REGISTER_GLOBAL("topi.nn.l2_normalize")
-.set_body([](TVMArgs args, TVMRetValue *rv) {
-  *rv = nn::l2_normalize(args[0], static_cast<double>(args[1]), args[2]);
-  });
-
 TVM_REGISTER_GLOBAL("topi.nn.lrn")
 .set_body([](TVMArgs args, TVMRetValue *rv) {
   *rv = nn::lrn(args[0], args[1], args[2],
@@ -579,17 +564,6 @@ TVM_REGISTER_GLOBAL("topi.nn.lrn")
 TVM_REGISTER_GLOBAL("topi.vision.reorg")
 .set_body([](TVMArgs args, TVMRetValue *rv) {
   *rv = vision::reorg(args[0], args[1]);
-  });
-
-/* Ops from image/resize.h */
-TVM_REGISTER_GLOBAL("topi.image.bilinear_sample_nchw")
-.set_body([](TVMArgs args, TVMRetValue *rv) {
-  *rv = image::bilinear_sample_nchw(args[0], args[1], args[2], args[3]);
-  });
-
-TVM_REGISTER_GLOBAL("topi.image.resize")
-.set_body([](TVMArgs args, TVMRetValue *rv) {
-  *rv = image::resize(args[0], args[1], args[2], args[3], args[4]);
   });
 
 /* Generic schedules */
@@ -693,11 +667,6 @@ TVM_REGISTER_GLOBAL("topi.rocm.schedule_lrn")
   *rv = topi::rocm::schedule_lrn(args[0], args[1]);
   });
 
-TVM_REGISTER_GLOBAL("topi.rocm.schedule_l2_normalize")
-.set_body([](TVMArgs args, TVMRetValue *rv) {
-  *rv = topi::rocm::schedule_l2_normalize(args[0], args[1]);
-  });
-
 /* CUDA schedules */
 TVM_REGISTER_GLOBAL("topi.cuda.dense_cuda")
 .set_body([](TVMArgs args, TVMRetValue *rv) {
@@ -744,15 +713,15 @@ TVM_REGISTER_GLOBAL("topi.cuda.schedule_lrn")
   *rv = topi::cuda::schedule_lrn(args[0], args[1]);
   });
 
-TVM_REGISTER_GLOBAL("topi.cuda.schedule_l2_normalize")
-.set_body([](TVMArgs args, TVMRetValue *rv) {
-  *rv = topi::cuda::schedule_l2_normalize(args[0], args[1]);
-  });
-
 /* Utility functions */
 TVM_REGISTER_GLOBAL("topi.util.is_empty_shape")
 .set_body([](TVMArgs args, TVMRetValue *rv) {
   *rv = topi::detail::is_empty_shape(args[0]);
+  });
+
+TVM_REGISTER_GLOBAL("topi.util.bilinear_sample_nchw")
+.set_body([](TVMArgs args, TVMRetValue *rv) {
+  *rv = detail::bilinear_sample_nchw(args[0], args[1], args[2], args[3]);
   });
 
 /*! \brief Builder function for instantiating schedules. */
