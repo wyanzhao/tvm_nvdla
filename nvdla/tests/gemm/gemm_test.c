@@ -2,93 +2,36 @@
 
 int main()
 {
-    NvDlaInit("GemmTest");
-    
-    void* input_tensor = AddFloatTensor("data0", 4, 1, 1, 2, 1);
-    AddInputOp(input_tensor);
-
     float weight[] ={3};
-    AddFloatWeightTensorFromNumpy("weight0", 4, weight, 1, 1, 1, 1);
+    float B_12[] = {4,4,3,1,4,1,2,2,1,3,3,3,1,1,3,3,1,4,2,2,2,1,4,1,4,4,1,4,2,2,1,4,1,2,4,3
+        ,1,4,4,3,3,2,3,1,4,3,3,2,3,2,4,4,4,1,1,4,4,3,4,3,3,1,4,4,4,1,4,4,4,2,1,3,2,1,4,2,2,1,2,
+        4,1,2,1,3,3,4,2,1,2,3,4,1,4,1,3,1,2,4,3,4,1,2,1,4,1,1,1,3,3,1,1,2,4,2,3,2,4,1,2,3,2,3,2,1,1,3};
+    float c13[] = {3,3,1,2,3,3,4};
+    float B_24[] =  {4, 1,1,1,2, 1, 2};
+    float C_25[] = {2};
+    (void)NvDlaInit("Init");
+    (void)AddInputOp(AddFloatTensor(40811168, 4, 1, 1, 6, 3));
+    (void)AddFloatWeightTensorFromNumpy(40810928, 4, weight, 1, 1, 1, 1);
+    (void)AddOutput(AddConvOp(40811168, 40810928), AddFloatTensor(40812048, 4, 1, 1, 6, 3));
+    (void)AddOutput(AddReshapeOp(40812048, 2, 1, 18), AddFloatTensor(40811696, 2, 1, 18));
 
-    void* conv_op = AddConvOp("data0", "weight0");
-    SetConvStrides(conv_op, 2, 1, 1);
-    AddOutput(conv_op, AddFloatTensor("activation0", 4, 1, 1, 2, 1));
+    (void)AddFloatWeightTensorFromNumpy(40810864, 2, B_12, 18, 7);
+    (void)AddFloatWeightTensorFromNumpy(40807488, 2, c13, 1, 7);
+    (void)AddOutput(AddGemmOp(40811696, 40810864, 40807488), AddFloatTensor(40811392, 2, 1, 7));
+    (void)SetGemmAlpha(GetOpPointer(40811696), 1.0);
+    (void)SetGemmBeta(GetOpPointer(40811696), 1.0);
+    (void)SetGemmTransA(GetOpPointer(40811696), 0);
+    (void)SetGemmTransB(GetOpPointer(40811696), 0);
+    (void)AddOutput(AddReluOp(40811392), AddFloatTensor(40811088, 2, 1, 7));
 
-    AddReshapeTensor("reshape_dummy_1", 2, 1, 2);    
-    void* reshape_op = AddReshapeOp("activation0", "reshape_dummy_1");
-    AddOutput(reshape_op, AddFloatTensor("reshape_output", 2, 1, 2));
-
-    float b12[] = {2, 4, 1, 2, 4, 4, 4, 4, 3, 1, 1, 3, 3, 1};
-    AddFloatWeightTensorFromNumpy("B12", 2, b12, 2, 7);
-    float c13[] = {4, 1, 3, 4, 1, 2, 4};
-    AddFloatWeightTensorFromNumpy("C13", 2, c13, 1, 7);
-    void* gemm_op = AddGemmOp("reshape_output", "B12", "C13");
-    AddOutput(gemm_op, AddFloatTensor("gemm_output", 2, 1, 7));
-
-    float b24[] = { 4,
-        1,
-        2,
-        4,
-        2,
-        4,
-        3,
-        2,
-        3,
-        4,
-        3,
-        3,
-        4,
-        1,
-        3,
-        3,
-        4,
-        1,
-        2,
-        1,
-        1,
-        1,
-        3,
-        4,
-        2,
-        2,
-        4,
-        1,
-        2,
-        4,
-        1,
-        1,
-        3,
-        2,
-        4,
-        3,
-        1,
-        4,
-        1,
-        2,
-        1,
-        2,
-        2,
-        3,
-        4,
-        1,
-        2,
-        2,
-        2,
-        1,
-        3,
-        1,
-        2,
-        4,
-        3,
-        3};
-    AddFloatWeightTensorFromNumpy("B24", 2, b24, 7, 8);
-    float c25[] = {3, 3, 3, 4, 1, 3, 1, 4};
-    AddFloatWeightTensorFromNumpy("C25", 2, c25, 1, 8);
-    void* gemm_op2 = AddGemmOp("gemm_output", "B24", "C25");
-    AddOutput(gemm_op2, AddFloatTensor("gemm_output2", 2, 1, 8));
-
-    AddOutputOp("gemm_output2");
-    Compile();
-
+    (void)AddFloatWeightTensorFromNumpy(40807664, 2, B_24, 7, 1);
+    (void)AddFloatWeightTensorFromNumpy(40807904, 2, C_25, 1, 1);
+    (void)AddOutput(AddGemmOp(40811088, 40807664, 40807904), AddFloatTensor(40812560, 2, 1, 1));
+    (void)SetGemmAlpha(GetOpPointer(40811088), 1.0);
+    (void)SetGemmBeta(GetOpPointer(40811088), 1.0);
+     (void)SetGemmTransA(GetOpPointer(40811088), 0);
+    (void)SetGemmTransB(GetOpPointer(40811088), 0);
+    ( void)AddOutputOp(40812560);
+    ( void)NvDlaCompile();
     return 0;
 }

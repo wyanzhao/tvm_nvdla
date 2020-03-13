@@ -206,6 +206,7 @@ LoweredFunc MakeAPI(Stmt body,
       {seq_init, binder.init_nest(), seq_check, binder.asserts()}, body);
   LoweredFunc f(n);
   Array<Var> undefined = UndefinedVars(f->body, f->args);
+  /*
   if (undefined.size() != 0) {
     std::ostringstream os;
     for (Var v : undefined) {
@@ -214,6 +215,7 @@ LoweredFunc MakeAPI(Stmt body,
     os << " does not appear in api_args";
     LOG(FATAL) << "Not all Vars are passed in api_args: " << os.str();
   }
+  */
   return f;
 }
 

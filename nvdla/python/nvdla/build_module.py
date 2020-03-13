@@ -64,11 +64,17 @@ def build_config(debug_flag=0, **kwargs):
         init = tvm.call_extern(
             "int32", "NvDlaInit", "NvDlaBuild")
 
-        return tvm.make.stmt_seq(init, stmt)
+        return tvm.stmt.stmt_seq(init, stmt)
+
+    def add_output(stmt):
+        output = tvm.call_extern(
+            "handle", "NvDlaCompile()"
+        )
+        return tvm.stmt.stmt_seq(output, stmt)
 
 
     pass_list = [(0, init_nvdla_lib)]
-    #pass_list = [(1, add_input)]
+    pass_list = [(100, add_output)]
     #if debug_flag:
     #    pass_list.append((1, add_debug))
     return tvm.build_config(add_lower_pass=pass_list, **kwargs)

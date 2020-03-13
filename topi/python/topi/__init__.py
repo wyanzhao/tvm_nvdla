@@ -44,6 +44,7 @@ from . import nn
 from . import x86
 from . import cuda
 from . import arm_cpu
+from . import nvdla
 from . import mali
 from . import bifrost
 from . import intel_graphics

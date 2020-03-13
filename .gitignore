@@ -10,6 +10,8 @@ __pycache__/
 *.nvdla
 *.pb
 *.npy
+*.txt
+*.dimg
 
 # Distribution / packaging
 .Python

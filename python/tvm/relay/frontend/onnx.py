@@ -209,6 +209,9 @@ class Pool(OnnxOpConverter):
                                                        dims=(len(input_shape) - 2))
         else:
             attr['layout'] = onnx_default_layout(dims=(len(input_shape) - 2))
+        
+        if attr.get('storage_orger') == 0:
+            del(attr['storage_order'])
 
         return AttrCvt(
             op_name=dimension_picker(cls.name),
@@ -245,11 +248,11 @@ class BatchNorm(OnnxOpConverter):
     @classmethod
     def _impl_v1(cls, inputs, attr, params):
         # TODO(zhreshold): 'spatial' is not properly handled here.
-        out = AttrCvt(
+        return AttrCvt(
             op_name='batch_norm',
             ignores=['spatial', 'is_test', 'consumed_inputs', 'momentum'])(inputs, attr,
                                                                            params)
-        return out[0]
+        #return out[0]
 
 
 class InstanceNorm(OnnxOpConverter):
@@ -269,6 +272,16 @@ class Conv(OnnxOpConverter):
     def _impl_v1(cls, inputs, attr, params):
         # Use shape of input to determine convolution type.
         input_shape = infer_shape(inputs[0])
+
+        if 'kernel_shape' not in attr:
+            kernel_shape = infer_shape(inputs[1])
+            attr['kernel_shape'] = (kernel_shape[2], kernel_shape[3])
+        if 'pads' not in attr:
+            attr['pads'] = (0, 0)
+        if 'dilations' not in attr:
+            attr['dilations'] = (1, 1)
+        if 'group' not in attr:
+            attr['group'] = (1)
 
         if 'auto_pad' in attr:
             attr['auto_pad'] = attr['auto_pad'].decode('utf-8')
@@ -1265,7 +1278,8 @@ def _get_convert_map(opset):
         # 'Hardmax'
         'Softsign': Softsign.get_converter(opset),
         'SoftPlus': SoftPlus.get_converter(opset),
-        'Gemm': Gemm.get_converter(opset),
+        #'Gemm': Gemm.get_converter(opset),
+        'Gemm': Renamer('gemm'),
         'MatMul': MatMul.get_converter(opset),
 
         # defs/nn

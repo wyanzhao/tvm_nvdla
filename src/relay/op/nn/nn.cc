@@ -167,6 +167,61 @@ Useful for
 .add_type_rel("FIFOBuffer", FIFOBufferRel);
 
 
+// relay.leaky_relu
+TVM_REGISTER_NODE_TYPE(GemmAttrs);
+
+Expr MakeGemm(Expr data,
+              Expr weight,
+              Expr bias,
+             double alpha,
+             double beta,
+             int32_t transA,
+             int32_t transB,
+             DataType out_dtype) {
+  auto attrs = make_object<GemmAttrs>();
+  attrs->alpha = alpha;
+  attrs->beta = beta;
+  attrs->transA = transA;
+  attrs->transB = transB;
+  attrs->out_dtype = out_dtype;
+
+  static const Op& op = Op::Get("nn.gemm");
+  return CallNode::make(op, {data, weight, bias}, Attrs(attrs), {});
+}
+
+
+TVM_REGISTER_GLOBAL("relay.op.nn._make.gemm")
+.set_body_typed(MakeGemm);
+
+RELAY_REGISTER_OP("nn.gemm")
+.describe(R"code(Leaky version of a Rectified Linear Unit.
+
+`y = x > 0 ? x : alpha * x`
+
+)code" TVM_ADD_FILELINE)
+.set_attrs_type<GemmAttrs>()
+.set_num_inputs(3)
+.add_argument("data", "Tensor", "Input data.")
+.add_argument("weight", "Tensor", "weight data.")
+.add_argument("bias", "Tensor", "bias data.")
+.set_support_level(3)
+.add_type_rel("Gemm", GemmRel<GemmAttrs>);
+/*
+.set_attr<FTVMCompute>(
+  "FTVMCompute", [](const Attrs& attrs,
+                    const Array<te::Tensor>& inputs,
+                    const Type& out_type,
+                    const Target& target) {
+    const auto* param = attrs.as<GemmAttrs>();
+    return Array<te::Tensor>{ topi::gemm(inputs[0], inputs[1],
+    inputs[2],
+    param->alpha,
+    param->beta,
+    param->transA,
+    param->transB) };
+});
+*/
+
 // relay.nn.dense
 TVM_REGISTER_NODE_TYPE(DenseAttrs);
 
@@ -668,13 +723,14 @@ bool BatchNormRel(const Array<Type>& types,
 
   // output is a tuple of the normed data (same shape as input), new running mean,
   // and new running average (the latter two are both vectors of length dim)
-  std::vector<Type> fields;
-  auto vec_ty = TensorType(Array<IndexExpr>({data->shape[axis]}),
-                                     data->dtype);
-  fields.push_back(TensorType(data->shape, data->dtype));
-  fields.push_back(vec_ty);
-  fields.push_back(vec_ty);
-  reporter->Assign(types[5], TupleType(Array<Type>(fields)));
+  // std::vector<Type> fields;
+  // auto vec_ty = TensorType(Array<IndexExpr>({data->shape[axis]}),
+  //                                    data->dtype);
+  // fields.push_back(TensorType(data->shape, data->dtype));
+  // fields.push_back(vec_ty);
+  // fields.push_back(vec_ty);
+  // reporter->Assign(types[5], TupleType(Array<Type>(fields)));
+  reporter->Assign(types[5], TensorType(data->shape, data->dtype));
   return true;
 }
 
@@ -738,7 +794,11 @@ axis to be the last item in the input shape.
 .add_argument("moving_var", "Tensor", "Running variance of input.")
 .set_attr<FInferCorrectLayout>("FInferCorrectLayout", BatchNormInferCorrectLayout)
 .set_support_level(1)
-.add_type_rel("BatchNorm", BatchNormRel);
+.add_type_rel("BatchNorm", BatchNormRel)
+.set_attr<FTVMCompute>("FTVMCompute", [](const Attrs& attrs, const Array<te::Tensor>& inputs,
+                                        const Type& out_type, const Target& target) {
+    return tvm::Array<tvm::te::Tensor>{topi::batch_norm(inputs[0], inputs[1], inputs[2], inputs[3], inputs[4])};
+});
 
 
 // instance_norm

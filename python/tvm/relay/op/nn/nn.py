@@ -1060,6 +1060,17 @@ def batch_flatten(data):
     return _make.batch_flatten(data)
 
 
+def gemm(data, 
+        weight,
+        bias,
+        alpha = 1.0,
+        beta = 1.0,
+        transA = 0,
+        transB = 0,
+        out_dtype=""):
+    return _make.gemm(data, weight, bias, alpha, beta, transA, transB, out_dtype)
+
+
 def bias_add(data, bias, axis=1):
     """add_bias operator.
 
@@ -1472,7 +1483,7 @@ def batch_norm(data,
         new running mean (k-length vector),
         and new running variance (k-length vector)
     """
-    result = _make.batch_norm(data,
+    return _make.batch_norm(data,
                               gamma,
                               beta,
                               moving_mean,
@@ -1481,7 +1492,16 @@ def batch_norm(data,
                               epsilon,
                               center,
                               scale)
-    return TupleWrapper(result, 3)
+    # result = _make.batch_norm(data,
+    #                           gamma,
+    #                           beta,
+    #                           moving_mean,
+    #                           moving_var,
+    #                           axis,
+    #                           epsilon,
+    #                           center,
+    #                           scale)
+    # return TupleWrapper(result, 3)
 
 
 def instance_norm(data,

@@ -51,6 +51,25 @@ tvm::PrimExpr Map(const tvm::Array<tvm::PrimExpr>& exprs, T op) {
 
 }  // namespace detail
 
+
+inline tvm::te::Tensor batch_norm(const tvm::te::Tensor& t,
+                        const tvm::te::Tensor& gamma,
+                        const tvm::te::Tensor& beta,
+                        const tvm::te::Tensor& mean,
+                        const tvm::te::Tensor& var,
+                        float epsilon = 9.99999974738e-06,
+                        std::string name = "T_batch_norm",
+                        std::string tag = kBroadcast) {
+
+  CHECK_EQ(4, t->shape.size());
+  
+    auto l = [&](tvm::tir::Var b, tvm::tir::Var c, tvm::tir::Var h, tvm::tir::Var w) {
+    return ((t(b, c, h, w) - mean(c)) / sqrt(var(c) + epsilon) * gamma(c) + beta(c));
+  };
+
+  return tvm::te::compute(t->shape, l, name, tag);
+}
+
 /*!
  * \brief Creates an operation that performs a rectified linear unit
  *
@@ -99,6 +118,53 @@ inline tvm::te::Tensor leaky_relu(const tvm::te::Tensor& t,
     },
     name,
     tag);
+}
+
+
+inline tvm::te::Tensor gemm(const tvm::te::Tensor& data,
+                              const tvm::te::Tensor& weight,
+                              const tvm::te::Tensor& bias,
+                              double alpha = 1.0,
+                              double beta = 1.0,
+                              int32_t transA = 0,
+                              int32_t transB = 0,
+                              std::string name = "T_gemm",
+                              std::string tag = kElementWise) {
+    CHECK_EQ(2, data->shape.size());
+    CHECK_EQ(2, weight->shape.size());
+    if (transB == 0)
+    {
+      tvm::Array<tvm::PrimExpr> output_shape{data->shape[0], weight->shape[1]};
+      auto i = tvm::te::reduce_axis(tvm::Range{0, data->shape[1]}, "i");
+      auto j = tvm::te::reduce_axis(tvm::Range{0, weight->shape[0]}, "j");
+  
+    auto l = [&](tvm::tir::Var b, tvm::tir::Var o) {
+    auto value = data(b, i);
+    auto calpha = tvm::tir::make_const(value.dtype(), alpha);
+    auto cbeta = tvm::tir::make_const(value.dtype(), beta);
+      return ( calpha * data(b, i) * weight(j, o) + cbeta * bias(b, o));
+      };
+  
+  return tvm::te::compute(output_shape, l, name, tag);
+    }
+      
+    else {
+      tvm::Array<tvm::PrimExpr> output_shape{data->shape[0], weight->shape[0]};
+            auto i = tvm::te::reduce_axis(tvm::Range{0, data->shape[1]}, "i");
+      auto j = tvm::te::reduce_axis(tvm::Range{0, weight->shape[0]}, "j");
+  
+    auto l = [&](tvm::tir::Var b, tvm::tir::Var o) {
+    auto value = data(b, i);
+    auto calpha = tvm::tir::make_const(value.dtype(), alpha);
+    auto cbeta = tvm::tir::make_const(value.dtype(), beta);
+      return ( calpha * data(b, i) * weight(j, o) + cbeta * bias(b, o));
+      };
+  
+  return tvm::te::compute(output_shape, l, name, tag);
+    }
+      
+
+  
 }
 
 /*!

@@ -651,6 +651,30 @@ struct AvgPool3DAttrs : public tvm::AttrsNode<AvgPool3DAttrs> {
 };
 
 
+struct GemmAttrs : public tvm::AttrsNode<GemmAttrs> {
+  double alpha;
+  double beta;
+  int32_t transA;
+  int32_t transB;
+  DataType out_dtype;
+
+
+    TVM_DECLARE_ATTRS(GemmAttrs, "relay.attrs.GemmAttrs") {
+    TVM_ATTR_FIELD(alpha).set_default(1.0)
+        .describe("Slope coefficient for the negative half axis.");
+      TVM_ATTR_FIELD(beta).set_default(1.0)
+        .describe("Slope coefficient for the negative half axis.");
+      TVM_ATTR_FIELD(transA).set_lower_bound(0)
+        .describe("Slope coefficient for the negative half axis.");
+        TVM_ATTR_FIELD(transB).set_lower_bound(0)
+        .describe("Slope coefficient for the negative half axis.");
+        TVM_ATTR_FIELD(out_dtype)
+         .set_default(NullValue<DataType>())
+         .describe("Output data type, set to explicit type under mixed precision setting");
+  }
+};
+
+
 /*! \brief Attributes for dense operator */
 struct DenseAttrs : public tvm::AttrsNode<DenseAttrs> {
   IndexExpr units;

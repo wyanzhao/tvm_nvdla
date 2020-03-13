@@ -106,11 +106,13 @@ class ConstIntBoundAnalyzer::Impl :
     if (!override) {
       auto it = var_map_.find(var);
       if (it != var_map_.end()) {
+        /*
         CHECK(it->second == info)
             << "Trying to update var \'" << var << "\'"
             << " with a different const bound: "
             << "original=" << ConstIntBound(it->second.min_value, it->second.max_value)
             << ", new=" << ConstIntBound(info.min_value, info.max_value);
+        */
       }
     }
     var_map_[var] = info;

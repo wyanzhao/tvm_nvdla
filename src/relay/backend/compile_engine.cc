@@ -687,16 +687,16 @@ class CompileEngineImpl : public CompileEngineNode {
   CCacheValue LowerInternal(const CCacheKey& key)  {
     std::lock_guard<std::mutex> lock(mutex_);
     CCacheValue value;
-    auto it = cache_.find(key);
-    if (it != cache_.end()) {
-      it->second->use_count += 1;
-      if (it->second->cached_func.defined()) return it->second;
-      value = it->second;
-    } else {
+   // auto it = cache_.find(key);
+   // if (it != cache_.end()) {
+   //   it->second->use_count += 1;
+   //   if (it->second->cached_func.defined()) return it->second;
+   //   value = it->second;
+   // } else {
       value = CCacheValue(make_object<CCacheValueNode>());
       value->use_count = 0;
-      cache_[key] = value;
-    }
+      //cache_[key] = value;
+  //  }
     // No need to lower external functions for now. We will invoke the external
     // codegen tool once and lower all functions together.
     if (!key->source_func->UseDefaultCompiler()) {
@@ -712,12 +712,11 @@ class CompileEngineImpl : public CompileEngineNode {
     // Enforce use the target.
     With<Target> target_scope(key->target);
 
-    CHECK(!value->cached_func.defined());
+    //CHECK(!value->cached_func.defined());
     auto spair = CreateSchedule(key->source_func, key->target);
     auto cache_node = make_object<CachedFuncNode>(
         *(spair.second.operator->()));
 
-    // Skip lowering for device copy node.
     const Expr body = (key->source_func)->body;
     if (const CallNode* call_node = body.as<CallNode>()) {
       if (call_node->attrs.as<DeviceCopyAttrs>()) {
@@ -727,6 +726,7 @@ class CompileEngineImpl : public CompileEngineNode {
     }
 
     cache_node->func_name = GetUniqueName(cache_node->func_name);
+    std::cout<< cache_node->func_name<< std::endl;
     // NOTE: array will copy on write.
     Array<te::Tensor> all_args = cache_node->inputs;
     for (te::Tensor arg : cache_node->outputs) {

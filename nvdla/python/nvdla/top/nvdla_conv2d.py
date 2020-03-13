@@ -17,7 +17,6 @@ def _declaration_conv2d(cfg,
                         layout,
                         out_dtype):
     """ Packed conv2d function."""
-    print("1111111111111111111111111111111111111111111111111111111")
     if not is_packed_layout(layout):
         raise topi.InvalidShapeError()
     assert dilation == (1, 1)
@@ -54,7 +53,6 @@ def _declaration_conv2d(cfg,
 
 @autotvm.register_topi_schedule(topi.generic.schedule_conv2d_nchw, 'nvdla', 'direct')
 def _schedule_conv2d(cfg, outs):
-    print("2222222222222222222222222222222222222222222222222222222")
     assert len(outs) == 1
     output = outs[0]
     const_ops = []

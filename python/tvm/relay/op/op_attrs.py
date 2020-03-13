@@ -85,6 +85,9 @@ class MirrorPadAttrs(Attrs):
 class LeakyReluAttrs(Attrs):
     """Attributes for nn.leaky_relu"""
 
+@register_relay_attr_node
+class GemmAttrs(Attrs):
+    """Atttribute of nn.bias_add"""
 
 @register_relay_attr_node
 class PReluAttrs(Attrs):

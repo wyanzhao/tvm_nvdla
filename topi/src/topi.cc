@@ -258,6 +258,12 @@ TVM_REGISTER_GLOBAL("topi.nn.leaky_relu")
   *rv = leaky_relu(args[0], args[1]);
   });
 
+TVM_REGISTER_GLOBAL("topi.nn.gemm")
+.set_body([](TVMArgs args, TVMRetValue *rv) {
+  *rv = gemm(args[0], args[1], args[2], args[3], args[4], args[5], args[6]);
+  });
+
+
 TVM_REGISTER_GLOBAL("topi.nn.prelu")
 .set_body([](TVMArgs args, TVMRetValue *rv) {
   *rv = prelu(args[0], args[1], args[2]);

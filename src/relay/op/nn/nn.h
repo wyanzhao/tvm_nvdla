@@ -30,6 +30,51 @@ namespace tvm {
 namespace relay {
 
 template <typename AttrType>
+bool GemmRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
+              const TypeReporter& reporter) {
+  CHECK_EQ(types.size(), 4);
+  const auto* data = types[0].as<TensorTypeNode>();
+  const auto* weight = types[1].as<TensorTypeNode>();
+  const auto* bias = types[2].as<TensorTypeNode>();
+  if (data == nullptr) return false;
+
+  const AttrType* param = attrs.as<AttrType>();
+  CHECK(param != nullptr);
+
+  CHECK(static_cast<int>(data->shape.size()) != 0);
+
+  Array<tvm::PrimExpr> oshape = data->shape;
+    if (weight == nullptr) return false;
+  Array<tvm::PrimExpr> wshape = weight->shape;
+  CHECK(static_cast<int>(data->shape.size()) == 2);
+  CHECK(static_cast<int>(weight->shape.size()) == 2);
+  if (param->transB == 1)
+  {
+    CHECK(reporter->AssertEQ(data->shape[1],
+                             weight->shape[1]))
+        << "DenseRel: input dimension doesn't match,"
+        << " data shape=" << data->shape << ", weight shape=" << weight->shape;
+            oshape.Set((oshape.size() - 1), wshape[0]);
+  } else {
+    CHECK(reporter->AssertEQ(data->shape[1],
+                             weight->shape[0]))
+        << "DenseRel: input dimension doesn't match,"
+        << " data shape=" << data->shape << ", weight shape=" << weight->shape;
+            oshape.Set((oshape.size() - 1), wshape[1]);
+  }
+  
+
+
+  DataType out_dtype = param->out_dtype;
+  if (out_dtype.bits() == 0) {
+    out_dtype = data->dtype;
+  }
+  // assign output type
+  reporter->Assign(types[3], TensorType(oshape, out_dtype));
+  return true;
+}
+
+template <typename AttrType>
 bool DenseRel(const Array<Type>& types, int num_inputs, const Attrs& attrs,
               const TypeReporter& reporter) {
   CHECK_EQ(types.size(), 3);

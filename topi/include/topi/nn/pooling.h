@@ -123,7 +123,9 @@ inline Tensor pool_impl(const Tensor& x,
                       ((padding_h1 && *padding_h1) || (padding_w1 && *padding_w1));
 
   if (pool_type == kMaxPool) {
-    auto temp = do_pad ? pad(
+    //auto temp = do_pad ? pad(
+    //    x, pad_before, pad_after, tvm::min_value(x->dtype), "pad_temp") : x;
+    auto temp = false ? pad(
         x, pad_before, pad_after, tvm::min_value(x->dtype), "pad_temp") : x;
     return tvm::te::compute(out_shape, [&](const Array<Var>& output) {
       Array<PrimExpr> indices;

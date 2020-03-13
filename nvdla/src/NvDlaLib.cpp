@@ -576,9 +576,16 @@ NvDlaLib::create_float_weight_tensor_from_numpy(const std::string& pName,
   ((FloatTensor *)value)->getValues().resize(numElems); 
   for (size_t i = 0; i < numElems; ++i) {
     ((FloatTensor *)value)->getValues()[i] = weight[i];
-    printf("%f\n", ((FloatTensor *)value)->getValues()[i]);
+    // printf("%f\n", ((FloatTensor *)value)->getValues()[i]);
   }
-  
+  /*
+  #ifdef NVDLA_DEBUG
+  for(auto i = 0; i < numElems; ++i)
+  {
+    std::cout<< weight[i]<< std::endl;
+  }
+  #endif
+  */
   init->setTensor(*value);
 }
 
@@ -644,8 +651,7 @@ void NvDlaLib::compile()
   ComputeGraph::iterator nodeIt, nEnd = m_pCG->end();
     for (nodeIt = m_pCG->begin(); nodeIt != nEnd; ++nodeIt) {
         const onnc::ComputeOperator *node = nodeIt;
-        std::cout<< node->name()<< std::endl;
-        node->dump(); 
+        //std::cout<< node->name()<< std::endl;
         if(node->name() == "Relu"){
             this->relu(* (Relu *) node);
         } else if(node->name() == "Conv") {
@@ -671,11 +677,14 @@ void NvDlaLib::compile()
           //assert((node->name() == "InputOperator" || node->name() == "Initializer" || node->name() == "OutputOperator"));
           if (!(node->name() == "InputOperator" || node->name() == "Initializer" || node->name() == "OutputOperator")) {
             std::cout<< "Unsupport Op:"<< node->name()<< std::endl;
-            std::abort();
+            //std::abort();
+            //exit(0)
           }
         }
-        
+        //node->dump();
   }
   this->task_submit();
   this->nvdla_filegen();
+
+
 }

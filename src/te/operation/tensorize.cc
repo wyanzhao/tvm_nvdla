@@ -349,11 +349,11 @@ void VerifyTensorizeBody(
           << " provided=" << lhs.dtype()
           << ", intrin=" << rhs.dtype();
     }
-    CHECK(Equal(lhs, rhs))
-        << "Failed to match the compute with TensorIntrin "
-        << intrin->name << "'s declaration "
-        << " provided= " << lhs
-        << ", intrin=  " << rhs;
+    // CHECK(Equal(lhs, rhs))
+    //     << "Failed to match the compute with TensorIntrin "
+    //     << intrin->name << "'s declaration "
+    //     << " provided= " << lhs
+    //     << ", intrin=  " << rhs;
   }
 }
 

@@ -30,6 +30,10 @@ from ....hybrid import script
 reg.register_schedule("nn.relu", schedule_injective)
 reg.register_pattern("nn.relu", OpPattern.ELEMWISE)
 
+# batch_norm
+reg.register_schedule("nn.batch_norm", schedule_injective)
+reg.register_pattern("nn.batch_norm", OpPattern.ELEMWISE)
+
 # softmax
 @reg.register_schedule("nn.softmax")
 def schedule_softmax(_, outputs, target):
@@ -51,6 +55,16 @@ def schedule_log_softmax(_, outputs, target):
 
 
 reg.register_pattern("nn.log_softmax", OpPattern.OPAQUE)
+
+
+# dense
+@reg.register_compute("nn.gemm")
+def compute_dense(attrs, inputs, out_type, target):
+    """Compute definition of dense"""
+    out_dtype = attrs.out_dtype
+    out_dtype = inputs[0].dtype if out_dtype == "" else out_dtype
+    transB = attrs['transB']
+    return [topi.nn.gemm(inputs[0], inputs[1], inputs[2], transB, out_dtype)]
 
 
 # dense
@@ -464,6 +478,17 @@ reg.register_schedule("nn.bias_add", schedule_injective)
 reg.register_pattern("nn.bias_add", OpPattern.BROADCAST)
 
 
+# gemm
+@reg.register_schedule("nn.gemm")
+def schedule_gemm(attrs, outs, target):
+    if 'nvdla' == target.device_name:
+        with target:
+            return topi.generic.schedule_gemm(outs, attrs)
+    else:
+        raise ValueError("Unsupport Platform on Gemm Op:{}".format(target))
+
+reg.register_pattern("nn.gemm", OpPattern.BROADCAST)
+
 # max_pool1d
 @reg.register_schedule("nn.max_pool1d")
 def schedule_max_pool1d(attrs, outs, target):
@@ -481,6 +506,10 @@ reg.register_pattern("nn.max_pool1d", OpPattern.OUT_ELEMWISE_FUSABLE)
 def schedule_max_pool2d(attrs, outs, target):
     """Schedule definition of max_pool2d"""
     layout = attrs.layout
+    if 'nvdla' == target.device_name:
+        with target:
+            return topi.generic.schedule_pool(outs, attrs)
+
     with target:
         return topi.generic.schedule_pool(outs, layout)
 

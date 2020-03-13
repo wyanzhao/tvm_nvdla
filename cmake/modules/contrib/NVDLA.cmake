@@ -15,33 +15,12 @@
 # specific language governing permissions and limitations
 # under the License.
 
-# pylint: disable=wildcard-import
-"""Neural network operators"""
-from __future__ import absolute_import as _abs
+if(USE_NVDLA)
+  message(STATUS "Build with contrib.nvdla")
+  file(GLOB CSOURCE_RELAY_CONTRIB_SRC src/relay/backend/contrib/codegen_nvdla/codegen_nvdla.cc)
+  list(APPEND COMPILER_SRCS ${CSOURCE_RELAY_CONTRIB_SRC})
 
-from .conv1d import *
-from .conv2d import *
-from .conv3d import *
-from .deformable_conv2d import *
-from .depthwise_conv2d import *
-from .elemwise import *
-from .dilate import *
-from .flatten import *
-from .dense import *
-from .mapping import *
-from .pooling import *
-from .softmax import *
-from .gemm import *
-from .conv2d_transpose import *
-from .conv1d_transpose import *
-from .bnn import *
-from .upsampling import *
-from .local_response_norm import *
-from .bitserial_conv2d import *
-from .bitserial_dense import *
-from .batch_matmul import *
-from .sparse import *
-from .pad import *
-from .fifo_buffer import *
-from .depth_to_space import *
-from .space_to_depth import *
+  file(GLOB NVDLA_CONTRIB_SRC src/runtime/contrib/nvdla/*)
+  list(APPEND RUNTIME_SRCS ${NVDLA_CONTRIB_SRC})
+  message(STATUS "Build with NVDLA codegen: " ${NVDLA_CONTRIB_SRC})
+endif(USE_NVDLA)
